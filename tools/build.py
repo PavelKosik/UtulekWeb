@@ -565,7 +565,7 @@ def qform_actions(kind):
             <p class="note">Formulář nic neukládá ani neodesílá. Jen z odpovědí připraví zprávu, kterou pošlete e-mailem na <strong>{EMAIL}</strong> nebo SMS, případně ji vložíte do zprávy na <a href="{FB}" target="_blank" rel="noopener">Facebooku Depozita</a>. Raději voláte? <a href="tel:{PHONE_TEL}">{PHONE}</a></p>"""
 
 
-ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce" data-to="{EMAIL}" data-sms="{PHONE_TEL}" action="mailto:{EMAIL}?subject=Z%C3%A1jem%20o%20adopci" method="post" enctype="text/plain" novalidate>
+ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce" data-to="{EMAIL}" data-sms="{PHONE_TEL}" novalidate>
             <h3>Dotazník pro zájemce</h3>
             <p class="qform__lead">Pár kliknutí místo dlouhého psaní. Na tyhle otázky se Dita stejně zeptá a díky nim vám doporučí kočku, která k vám opravdu sedne.</p>
             <label class="qf qf--text">O kterou kočičku máte zájem?<input type="text" name="kocka" placeholder="např. Celesta, nebo nechte prázdné" autocomplete="off"></label>
@@ -587,7 +587,7 @@ ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce"
             {qform_actions("adopce")}
           </form>"""
 
-FOSTER_FORM = f"""<form class="qform reveal" id="prihlaska" data-qform="docaska" data-to="{EMAIL}" data-sms="{PHONE_TEL}" action="mailto:{EMAIL}?subject=Do%C4%8Dasn%C3%A1%20p%C3%A9%C4%8De" method="post" enctype="text/plain" novalidate>
+FOSTER_FORM = f"""<form class="qform reveal" id="prihlaska" data-qform="docaska" data-to="{EMAIL}" data-sms="{PHONE_TEL}" novalidate>
             <h3>Přihláška do dočasné péče</h3>
             <p class="qform__lead">Nezávazně. Dita se vám ozve a domluvíte se, jaká kočička by se k vám hodila.</p>
             {chips("bydleni", "Kde bydlíte?", [("v bytě", "V bytě"), ("v domě bez zahrady", "V domě"), ("v domě se zahradou", "V domě se zahradou")])}

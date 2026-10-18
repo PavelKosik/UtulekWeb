@@ -545,7 +545,8 @@
     form.addEventListener("change", function () { if (tried) validate(true); });
     var after = form.querySelector("[data-qform-after]");
 
-    // Odeslání (tlačítko i Enter): e-mail připravený z odpovědí. Bez JavaScriptu formulář použije action="mailto:".
+    // Odeslání (tlačítko i Enter): e-mail připravený z odpovědí. Formulář nemá action="mailto:",
+    // protože Chrome takový cíl na HTTPS stránce hlásí jako nezabezpečený; e-mail a telefon jsou i v poznámce pod ním.
     var mailBtn = form.querySelector("[data-qform-mail]");
     if (mailBtn) form.addEventListener("submit", function (e) {
       e.preventDefault();

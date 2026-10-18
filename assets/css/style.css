@@ -291,6 +291,7 @@ p { margin: 0 0 1em; text-wrap: pretty; }
   margin: 0; max-width: 24ch;
 }
 .statement .w { opacity: 0.6; transition: opacity 0.2s linear; }
+.statement em .w { opacity: 0.9; } /* zvýrazněná slova jsou i nerozsvícená čitelná (kontrast aspoň 3:1) */
 .statement .w.is-lit { opacity: 1; }
 .statement em { color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
 
