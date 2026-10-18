@@ -1,9 +1,14 @@
 /* Depozitum chlup-nechlup — interakce a scroll animace (bez knihoven) */
-(function () {
+(function (init) {
+  // Spustit až po prvním vykreslení: rozdělení slov, měření a posluchače by jinak o ~0,1 s
+  // zdržely první obraz stránky. Na první obrazovce nic z toho potřeba není (úvod animuje CSS).
+  window.__siteReady = true; // pojistka v <head> už nemusí zobrazovat obsah bez animací
+  if (document.visibilityState === "hidden") init();
+  else requestAnimationFrame(function () { setTimeout(init, 0); });
+})(function () {
   "use strict";
 
   var root = document.documentElement;
-  window.__siteReady = true; // pojistka v <head> už nemusí zobrazovat obsah bez animací
   root.classList.remove("js-off");
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -602,4 +607,5 @@
 
   /* ---------- Rok v patičce ---------- */
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
-})();
+  root.setAttribute("data-ready", "");
+});
