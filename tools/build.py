@@ -512,9 +512,9 @@ def gallery_alt(name):
 
 
 def gallery(items, cls="", eager=0):
-    """Galerie koček, které našly domov. Prvních `eager` fotek je na první obrazovce, ty se nenačítají líně."""
+    """Galerie koček, které našly domov. Prvních `eager` fotek je na první obrazovce: načtou se hned a přednostně."""
     figs = "\n".join(
-        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{gallery_alt(name)}" width="{w}" height="{h}"{"" if i < eager else ' loading="lazy"'} sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
+        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{gallery_alt(name)}" width="{w}" height="{h}"{' fetchpriority="high"' if i < eager else ' loading="lazy"'} sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
         for i, (slug, name, w, h) in enumerate(items)
     )
     return f'<div class="gallery {cls}">\n{figs}\n        </div>'
@@ -1115,7 +1115,7 @@ NASLI = f"""
 
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
-        {gallery(GALLERY, eager=4)}
+        {gallery(GALLERY, eager=1)}
       </div>
     </section>
 
