@@ -20,7 +20,7 @@ const OG = [
   { file: 'og-adopce.jpg', photos: ['assets/img/domov/ludvik-lucian.jpg'], eyebrow: 'Kočky k adopci · Strakonice', title: 'Najděte svou <em>spřízněnou duši</em>.', foot: 'Adopce bez poplatku · dospělé kočky kastrované' },
   { file: 'og-domov.jpg', photos: ['assets/img/domov/xia.jpg', 'assets/img/domov/bozanek.jpg', 'assets/img/domov/wilson.jpg'], eyebrow: 'Domov našli', title: `<em>${ADOPTED}</em> koček už má svého člověka.`, foot: 'Depozitum chlup-nechlup · Strakonice' },
   { file: 'og-docaska.jpg', photos: ['assets/img/eliot-a-emil.jpg'], eyebrow: 'Dočasná péče', title: 'Kočka doma <em>bez závazku</em> na celý život.', foot: 'Krmení, stelivo i veterinu platí depozitum' },
-  { file: 'og-podpora.jpg', photos: ['assets/img/mourek.jpg'], eyebrow: 'Podpořte nás', title: 'Každá koruna jde <em>na kočky</em>.', foot: 'Transparentní účet 6077760777/2010 · QR platba' },
+  { file: 'og-podpora.jpg', photos: ['assets/img/mourek.jpg'], eyebrow: 'Podpořte nás', title: 'Peníze jdou <em>na kočky</em>, ne na mzdy.', foot: 'Transparentní účet 6077760777/2010 · QR platba' },
   { file: 'og-nalez.jpg', photos: ['assets/img/odchyt.jpg'], eyebrow: 'Našli jste kočku?', title: 'Nejdřív volejte <em>obec</em>. Ze zákona.', foot: 'Postup krok za krokem · Depozitum chlup-nechlup' },
 ];
 

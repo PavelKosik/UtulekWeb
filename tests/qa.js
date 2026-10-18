@@ -13,7 +13,7 @@ try { ({ chromium } = require('playwright')); } catch (e) {
 const ROOT = path.resolve(__dirname, '..');
 const OUT = process.argv[3] || path.join(__dirname, 'out');
 fs.mkdirSync(OUT, { recursive: true });
-const PAGES = ['index.html', 'kocky-k-adopci.html', 'nasli-domov.html', 'docasna-pece.html', 'podporte-nas.html', 'nasli-jste-kocku.html', 'o-nas.html', 'plakat.html', 'soukromi.html'];
+const PAGES = ['index.html', 'kocky-k-adopci.html', 'nasli-domov.html', 'docasna-pece.html', 'podporte-nas.html', 'nasli-jste-kocku.html', 'pro-obce.html', 'o-nas.html', 'plakat.html', 'soukromi.html'];
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
 const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.woff2': 'font/woff2', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain' };
@@ -305,6 +305,7 @@ async function scrollThrough(p) {
     check('questionnaire prefills cat from URL', (await f.locator('[name=kocka]').inputValue()) === 'Zina');
     await f.locator('[data-qform-copy]').click();
     check('questionnaire asks for contact and conditions', await f.locator('[data-qform-error]').isVisible());
+    check('children age field hidden until "Děti" is ticked', !(await f.locator('[name=vek_deti]').isVisible()));
     await f.getByText('V bytě', { exact: true }).click();
     await f.getByText('Děti', { exact: true }).click();
     check('children age field appears', await f.locator('[name=vek_deti]').isVisible());
@@ -312,15 +313,62 @@ async function scrollThrough(p) {
     await f.locator('[name=jmeno]').fill('Test');
     await f.locator('[name=telefon]').fill('777 000 000');
     await f.locator('[name=podminky]').check();
+    check('questionnaire error clears once fields are filled', !(await f.locator('[data-qform-error]').isVisible()));
     await f.locator('[data-qform-copy]').click();
     const msg = await p.evaluate(() => navigator.clipboard.readText()).catch(() => '');
     check('questionnaire composes message', /Zina/.test(msg) && /v bytě/.test(msg) && /děti \(5 let\)/.test(msg) && /Tel\.: 777 000 000/.test(msg) && !(await f.locator('[data-qform-error]').isVisible()), msg.split('\n').slice(0, 2).join(' / '));
     check('SMS option on touch devices', await f.locator('[data-qform-sms]').isVisible());
+    await f.locator('[data-qform-mail]').click().catch(() => {});
+    await p.waitForTimeout(1200);
+    check('after sending: fallback with the e-mail address', await f.locator('[data-qform-after]').isVisible() && /@/.test(await f.locator('[data-qform-after]').innerText()));
     await p.goto(BASE + 'docasna-pece.html#prihlaska', { waitUntil: 'load' });
     const g = p.locator('#prihlaska');
     await g.getByText('Kočku', { exact: true }).click();
     await g.getByText('Nemám', { exact: true }).click();
     check('foster form: "Nemám" clears other animals', !(await g.locator('[name=zvirata][value="kočku"]').isChecked()) && /žádná zvířata/.test(await g.locator('[data-qform-preview]').innerText()));
+    await ctx.close();
+  }
+  for (const [w, h, mobile] of [[1280, 800, false], [390, 844, true]]) {
+    // dlouhý seznam: patička Peswebu („Načíst další“) je vypnutá, další kočky odkrývá tlačítko webu
+    const ctx = await newCtx(browser, { viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'kocky-k-adopci.html', { waitUntil: 'load' });
+    await p.locator('[data-widget-clip]').scrollIntoViewIfNeeded();
+    const clipped = await p.waitForFunction(() => document.querySelector('[data-widget-clip]').classList.contains('is-clipped'), null, { timeout: 30000 }).then(() => true, () => false);
+    const footer = async () => { const f = p.frames().find(fr => /pesweb\.cz\/widget/.test(fr.url())); return f ? f.evaluate(() => /Zobrazeno|Načíst další/.test(document.body.innerText)).catch(() => null) : null; };
+    const btn = p.locator('[data-widget-more] button');
+    const own = await footer();
+    check(`cat list (${w}px): Pesweb footer off, own button shown`, clipped && own === false && await btn.isVisible(), JSON.stringify({ clipped, footer: own }));
+    let clicks = 0;
+    while (clicks < 40 && await btn.isVisible()) { await btn.click(); clicks++; await p.waitForTimeout(150); }
+    await p.waitForTimeout(900);
+    const end = await p.evaluate(() => { const c = document.querySelector('[data-widget-clip]'); return { clip: c.offsetHeight, frame: c.querySelector('iframe').offsetHeight }; });
+    check(`cat list (${w}px): button reveals every cat, then hides`, clicks > 0 && !(await btn.isVisible()) && Math.abs(end.clip - end.frame) <= 2, JSON.stringify({ clicks, ...end }));
+    await p.goto(BASE + 'index.html', { waitUntil: 'load' });
+    await p.locator('#kocky [data-pesweb]').first().scrollIntoViewIfNeeded();
+    await p.waitForFunction(() => { const fr = document.querySelector('#kocky [data-pesweb] iframe'); return fr && fr.offsetHeight !== 600; }, null, { timeout: 30000 }).catch(() => {});
+    const home = await footer();
+    check(`homepage cats (${w}px): no Pesweb footer`, home === false, String(home));
+    await ctx.close();
+  }
+  for (const [w, h, mobile] of [[1280, 800, false], [390, 844, true]]) {
+    // odkaz „Mám zájem“: widget nad dotazníkem po načtení naroste, dotazník ale musí zůstat na očích
+    const ctx = await newCtx(browser, { viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'kocky-k-adopci.html?kocka=Celesta#dotaznik', { waitUntil: 'load' });
+    await p.waitForFunction(() => { const fr = document.querySelector('[data-pesweb] iframe'); return fr && fr.offsetHeight > 500; }, null, { timeout: 20000 }).catch(() => {});
+    await p.waitForTimeout(1500);
+    const top = await p.evaluate(() => Math.round(document.querySelector('#dotaznik').getBoundingClientRect().top));
+    check(`deep link #dotaznik stays in view after the widget loads (${w}px)`, top > -20 && top < h * 0.5, 'top ' + top);
+    await ctx.close();
+  }
+  {
+    const ctx = await newCtx(browser, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const p = await ctx.newPage();
+    const cta = async pg => { await p.goto(BASE + pg, { waitUntil: 'load' }); return p.evaluate(() => [...document.querySelectorAll('.mobile-cta a')].map(a => a.getAttribute('href'))); };
+    check('mobile bar: foster page leads to the sign-up form', (await cta('docasna-pece.html'))[0] === '#prihlaska');
+    check('mobile bar: finder page calls 156', (await cta('nasli-jste-kocku.html'))[0] === 'tel:156');
+    check('mobile bar: none on the donation page', (await cta('podporte-nas.html')).length === 0);
     await ctx.close();
   }
   {

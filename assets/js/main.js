@@ -219,6 +219,10 @@
       try {
         var cfg = JSON.parse(el.getAttribute("data-pesweb"));
         cfg.container = el;
+        if (cfg.layout && cfg.layout.mobileItems) {
+          if (window.innerWidth < 761) cfg.layout.itemsPerPage = cfg.layout.mobileItems;
+          delete cfg.layout.mobileItems;
+        }
         window.PeswebWidget.init(cfg);
         // widget dává iframu role="region", což iframe mít nesmí (WCAG); název má z title
         var frame = el.querySelector("iframe");
@@ -238,6 +242,54 @@
     widgets.forEach(initWidget);
   }
 
+  /* ---------- Dlouhý seznam koček: widget pošle všechny kočky a web je odkrývá po částech
+     vlastním tlačítkem (patička Peswebu s „Načíst další“ je vypnutá, její vzhled nejde sladit). ---------- */
+  document.querySelectorAll("[data-widget-clip]").forEach(function (clip) {
+    var more = clip.parentNode.querySelector("[data-widget-more]");
+    var frame = null, full = 0, shown = 0;
+    var step = function () { return Math.max(900, window.innerHeight * (window.innerWidth < 761 ? 4 : 2)); };
+    var render = function () {
+      var clipped = full > shown + 60;
+      clip.classList.toggle("is-clipped", clipped);
+      clip.style.maxHeight = (clipped ? shown : full) + "px";
+      more.hidden = !clipped;
+    };
+    window.addEventListener("message", function (e) {
+      if (e.origin !== "https://www.pesweb.cz" || !e.data || e.data.type !== "pesweb-widget-height") return;
+      var f = clip.querySelector("iframe");
+      if (!f || e.source !== f.contentWindow || typeof e.data.height !== "number") return;
+      if (f !== frame) { frame = f; shown = step(); } // nový widget (třeba po změně filtru) zase od začátku
+      full = e.data.height;
+      render();
+    });
+    more.querySelector("button").addEventListener("click", function () {
+      shown = clip.offsetHeight + step();
+      render();
+    });
+    // Klávesnice nebo hledání na stránce umí posunout obsah uvnitř ořezu; pak raději ukážeme všechno.
+    clip.addEventListener("scroll", function () {
+      if (!clip.scrollTop) return;
+      clip.scrollTop = 0;
+      shown = full;
+      render();
+    });
+  });
+
+  /* ---------- Kotva pod widgetem (#dotaznik, #pomoc…): widget po načtení naroste a cíl odjede.
+     Dokud člověk sám nescrolluje, vracíme ho ke kotvě po každé změně výšky widgetu (nejdéle 8 s). ---------- */
+  var pinned = null, pinUntil = 0;
+  var hashTarget = function () {
+    try { return location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null; } catch (e) { return null; }
+  };
+  var pin = function (el) { pinned = el; pinUntil = Date.now() + 8000; };
+  ["wheel", "touchmove", "keydown"].forEach(function (t) { window.addEventListener(t, function () { pinned = null; }, { passive: true }); });
+  if (hashTarget()) pin(hashTarget());
+  window.addEventListener("hashchange", function () { var t = hashTarget(); if (t) pin(t); });
+  window.addEventListener("message", function (e) {
+    if (!pinned || !e.data || e.data.type !== "pesweb-widget-height" || Date.now() > pinUntil) return;
+    requestAnimationFrame(function () { if (pinned) pinned.scrollIntoView({ block: "start", behavior: "instant" }); });
+  });
+
   /* ---------- Filtry koček (věk, pohlaví, řazení) — přenačtou widget, stav je v adrese ---------- */
   var filterForm = document.querySelector("[data-cat-filters]");
   var filterWidget = filterForm && document.querySelector("[data-pesweb]");
@@ -254,7 +306,7 @@
       var cfg = JSON.parse(filterWidget.getAttribute("data-pesweb"));
       var get = function (name) { return filterForm.querySelector('input[name="' + name + '"]:checked'); };
       var vek = get("vek"), pohlavi = get("pohlavi"), razeni = get("razeni");
-      cfg.filters = { shelter: cfg.filters.shelter, sort: razeni.getAttribute("data-api") };
+      cfg.filters = { shelter: cfg.filters.shelter, showPagination: cfg.filters.showPagination, sort: razeni.getAttribute("data-api") };
       if (vek.value) cfg.filters.age = vek.getAttribute("data-api");
       if (pohlavi.value) cfg.filters.sex = pohlavi.getAttribute("data-api");
       filterWidget.setAttribute("data-pesweb", JSON.stringify(cfg));
@@ -308,6 +360,24 @@
     });
   });
 
+  /* ---------- Uložit QR: na telefonu přes sdílení (nabídne Uložit obrázek), jinak stažení ---------- */
+  document.querySelectorAll(".qr-save").forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      if (!navigator.canShare || !window.fetch || !window.File) return;
+      e.preventDefault();
+      fetch(link.href).then(function (r) { return r.blob(); }).then(function (blob) {
+        var file = new File([blob], link.getAttribute("download") || "qr-platba.png", { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) return navigator.share({ files: [file] });
+        throw new Error("share");
+      }).catch(function (err) {
+        if (err && err.name === "AbortError") return;
+        var a = document.createElement("a");
+        a.href = link.href; a.download = link.getAttribute("download") || "";
+        document.body.appendChild(a); a.click(); a.remove();
+      });
+    });
+  });
+
   /* ---------- Volba částky daru: přepne QR kód a popis ---------- */
   document.querySelectorAll("[data-amounts]").forEach(function (box) {
     var buttons = [].slice.call(box.querySelectorAll("[data-amount]"));
@@ -324,10 +394,11 @@
           qr.src = b.getAttribute("data-qr");
           qr.alt = amount ? "QR platba " + amount + " Kč na transparentní účet" : "QR platba na transparentní účet";
         }
-        if (caption) caption.textContent = amount ? "QR platba " + amount + " Kč" : "QR platba, částku zadáte v aplikaci banky";
+        if (caption) caption.textContent = amount ? "QR platba " + Number(amount).toLocaleString("cs-CZ") + "\u00a0Kč" : "QR platba, částku zadáte v aplikaci banky";
         if (impact) impact.innerHTML = b.getAttribute("data-impact");
         if (save) {
           save.href = b.getAttribute("data-png");
+          save._amount = amount;
           save.setAttribute("download", "qr-platba-depozitum" + (amount ? "-" + amount : "") + ".png");
         }
       });
@@ -397,22 +468,22 @@
       var obec = val("obec"), bydleni = val("bydleni");
       if (kind === "adopce") {
         var kocka = val("kocka");
-        L.push(kocka ? "mám zájem o adopci: " + kocka + "." : "mám zájem o adopci kočičky a nechám si poradit, která by se k nám hodila.");
+        L.push(kocka ? "mám zájem o adopci. Kočka, o kterou jde: " + kocka + "." : "mám zájem o adopci kočky a nechám si poradit, která by se k nám hodila.");
         L.push("");
         if (bydleni || obec) L.push("Bydlím " + (bydleni || "") + (obec ? (bydleni ? " (obec " + obec + ")" : "v obci " + obec) : "") + ".");
         if (val("ven")) L.push("Kočka " + val("ven") + ".");
         if (val("site")) L.push("Sítě na oknech a balkoně: " + val("site") + ".");
         var dom = vals("domacnost");
         if (dom.length) {
-          L.push("Bydlí s námi: " + dom.map(function (d) { return d === "děti" && val("vek_deti") ? "děti (" + val("vek_deti") + ")" : d; }).join(", ") + ".");
+          L.push("V domácnosti: " + dom.map(function (d) { return d === "děti" && val("vek_deti") ? "děti (" + val("vek_deti") + ")" : d; }).join(", ") + ".");
         }
         if (val("zkusenosti")) L.push(sentence(val("zkusenosti")) + ".");
         if (val("sama")) L.push(val("sama") === "skoro vůbec" ? "Přes den kočka skoro nebude sama." : "Přes den bude kočka sama " + val("sama") + ".");
-        if (val("dovolena")) L.push("Když budeme pryč, postará se: " + val("dovolena") + ".");
-        if (val("ocekavani")) L.push("Co od kočičky čekáme: " + val("ocekavani"));
+        if (val("dovolena")) L.push("Hlídání, když budeme pryč: " + val("dovolena") + ".");
+        if (val("ocekavani")) L.push("Co od kočky čekáme: " + val("ocekavani") + (/[.!?]$/.test(val("ocekavani")) ? "" : "."));
         if (field("podminky") && field("podminky").checked) { L.push(""); L.push("Podmínky adopce (adopční smlouva, kastrace koťat v dospělosti) beru na vědomí."); }
       } else {
-        L.push("zajímá mě dočasná péče o kočičku.");
+        L.push("zajímá mě dočasná péče o kočku.");
         L.push("");
         if (bydleni || obec) L.push("Bydlím " + (bydleni || "") + (obec ? (bydleni ? " (obec " + obec + ")" : "v obci " + obec) : "") + ".");
         if (val("mistnost")) L.push(val("mistnost") === "ano" ? "Samostatnou místnost pro kočku mám." : "Samostatnou místnost pro kočku nemám.");
@@ -422,6 +493,7 @@
         if (delka) L.push(delka === "dokud nenajde domov" ? "Kočku si můžu nechat, dokud nenajde domov." : "Kočku si můžu vzít " + delka + ".");
         var koho = val("koho");
         if (koho) L.push(koho === "je mi to jedno" ? "Je mi jedno, jestli koťata, nebo dospělou kočku." : "Nejraději " + koho + ".");
+        if (val("poznamka")) { L.push(""); L.push(val("poznamka")); }
       }
       L.push("");
       if (val("jmeno")) L.push(val("jmeno"));
@@ -451,7 +523,9 @@
     });
     refresh();
 
-    var validate = function () {
+    var tried = false;
+    var validate = function (quiet) {
+      if (!quiet) tried = true;
       var missing = [];
       ["jmeno", "telefon"].forEach(function (n) { var el = field(n); if (el && !el.value.trim()) missing.push(el); });
       var cond = field("podminky");
@@ -464,9 +538,12 @@
         error.textContent = (needContact ? "Doplňte prosím jméno a telefon, ať se vám Dita může ozvat. " : "") + (cond && !cond.checked ? "Potvrďte prosím podmínky adopce." : "");
         error.hidden = false;
       }
-      missing[0].focus();
+      if (!quiet) missing[0].focus();
       return false;
     };
+    form.addEventListener("input", function () { if (tried) validate(true); });
+    form.addEventListener("change", function () { if (tried) validate(true); });
+    var after = form.querySelector("[data-qform-after]");
 
     // Odeslání (tlačítko i Enter): e-mail připravený z odpovědí. Bez JavaScriptu formulář použije action="mailto:".
     var mailBtn = form.querySelector("[data-qform-mail]");
@@ -475,6 +552,7 @@
       if (!validate()) return;
       var subject = mailBtn.getAttribute("data-subject") + (val("kocka") ? " – " + val("kocka") : "");
       location.href = "mailto:" + form.getAttribute("data-to") + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(compose().replace(/\n/g, "\r\n"));
+      if (after) setTimeout(function () { after.hidden = false; }, 800);
     });
     var smsBtn = form.querySelector("[data-qform-sms]");
     if (smsBtn) smsBtn.addEventListener("click", function () {
