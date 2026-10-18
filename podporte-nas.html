@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Podpořte nás · Depozitum chlup-nechlup</title>
-  <meta name="description" content="Transparentní účet 6077760777/2010 a další způsoby, jak podpořit Depozitum chlup-nechlup.">
+  <title>Podpořte nás · Depozitum chlup-nechlup Strakonice</title>
+  <meta name="description" content="Transparentní účet 6077760777/2010, QR platba, trvalý příkaz, věcné dary a sdílení. Jak podpořit Depozitum chlup-nechlup.">
   <meta name="theme-color" content="#f7f0e5">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Depozitum chlup-nechlup">
-  <meta property="og:title" content="Podpořte nás · Depozitum chlup-nechlup">
-  <meta property="og:description" content="Transparentní účet 6077760777/2010 a další způsoby, jak podpořit Depozitum chlup-nechlup.">
+  <meta property="og:title" content="Podpořte nás · Depozitum chlup-nechlup Strakonice">
+  <meta property="og:description" content="Transparentní účet 6077760777/2010, QR platba, trvalý příkaz, věcné dary a sdílení. Jak podpořit Depozitum chlup-nechlup.">
   <meta property="og:image" content="assets/img/kocka-tuxedo.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..700,100,0..1;1,9..144,500..700,100,0..1&amp;display=swap" rel="stylesheet">
+  <link rel="preload" href="assets/fonts/fraunces-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -44,34 +44,143 @@
       <div class="wrap">
         <p class="eyebrow reveal">Podpořte nás</p>
         <h1 class="reveal" style="--d:.06s">Bez vás by depozitum <span class="accent-word">nemohlo fungovat</span>.</h1>
-        <p class="lead reveal" style="--d:.12s">Nejsme zřizováni městem ani státem. Veškeré náklady na kastrace a ošetření hradíme z darů, případně z vlastní kapsy.</p>
+        <p class="lead reveal" style="--d:.12s">Provoz depozita stojí necelé 2 000 Kč denně. Město Strakonice nám od roku 2024 přispívá 20 000 Kč měsíčně, to pokryje zhruba třetinu. Zbytek, přes 450 000 Kč ročně, dáváte vy.</p>
       </div>
     </section>
 
-    <section class="section section--dark section--tight">
+    <section class="section section--dark section--tight" id="dar">
       <div class="wrap">
         <div class="donate">
           <div>
             <p class="eyebrow">Transparentní účet</p>
             <h2 class="reveal">Pošlete dar na kočičí účet</h2>
-            <p class="lead reveal">Majitelka účtu: Ing. Dita Uhriková · název účtu: Depozitum chlup-nechlup. Pohyby na účtu si můžete kdykoli prohlédnout na stránkách Fio banky.</p>
+            <p class="lead reveal">Majitel účtu: Depozitum chlup - nechlup z.s., IČO 19405901. Pohyby na účtu si můžete kdykoli prohlédnout na stránkách Fio banky.</p>
             <p class="reveal" style="opacity:.8">Ne všechny nákupy pro kočičky jsou z výpisu snadno čitelné, a proto na Facebooku sdílíme i účtenky a faktury v albu <a href="https://www.facebook.com/media/set/?vanity=depozitumchlupnechlup&amp;set=a.3773941716006989" target="_blank" rel="noopener">Transparentní účet</a>.</p>
           </div>
           <div class="account reveal" data-progress>
           <div>
             <div class="account__label">Transparentní účet · Fio banka</div>
             <div class="account__number">6077760777/2010</div>
-            <div class="account__meta">Depozitum chlup-nechlup · IBAN CZ61 2010 0000 0060 7776 0777</div>
+            <div class="account__meta">Depozitum chlup - nechlup z.s. · IBAN CZ61 2010 0000 0060 7776 0777</div>
+            <div class="amounts" data-amounts role="group" aria-label="Částka daru">
+              <button type="button" data-amount="300" data-qr="assets/img/qr-platba-300.svg" data-impact="<strong>300 Kč</strong> = tři desetilitrové pytle steliva. Jeden nás vyjde na 89 Kč." aria-pressed="false">300 Kč</button><button type="button" data-amount="500" data-qr="assets/img/qr-platba-500.svg" data-impact="<strong>500 Kč</strong> = krmení pro celé depozitum na půl dne. Za rok kočky spořádají krmivo za 380 000 Kč." aria-pressed="true">500 Kč</button><button type="button" data-amount="1500" data-qr="assets/img/qr-platba-1500.svg" data-impact="<strong>1 500 Kč</strong> = kastrace jedné kočky u našeho veterináře i s kapkami proti parazitům (poslední faktura 1 385 Kč)." aria-pressed="false">1 500 Kč</button><button type="button" data-amount="" data-qr="assets/img/qr-platba.svg" data-impact="<strong>Jakákoli částka</strong> pomáhá. Den provozu depozita stojí necelé 2 000 Kč." aria-pressed="false">Jiná</button>
+            </div>
+            <p class="impact" aria-live="polite"><strong>500 Kč</strong> = krmení pro celé depozitum na půl dne. Za rok kočky spořádají krmivo za 380 000 Kč.</p>
             <div class="btn-row">
-              <button class="btn" type="button" data-copy="6077760777/2010"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Kopírovat číslo</span></button>
+              <button class="btn" type="button" data-copy="6077760777/2010"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Kopírovat číslo účtu</span></button>
               <a class="btn btn--ghost" href="https://ib.fio.cz/ib/transparent?a=6077760777" target="_blank" rel="noopener">Pohyby na účtu<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
             </div>
           </div>
           <div class="account__qr">
-            <img src="assets/img/qr-platba.svg" alt="QR platba na transparentní účet 6077760777/2010" width="130" height="130">
-            QR platba — částku zadáte v aplikaci banky
+            <img src="assets/img/qr-platba-500.svg" alt="QR platba 500 Kč na transparentní účet" width="130" height="130">
+            <span>QR platba 500 Kč</span>
           </div>
         </div>
+        </div>
+        <div class="monthly">
+          <div>
+            <p class="eyebrow">Kočičí andělé</p>
+            <h3 class="reveal">Nejvíc pomůže pravidelný příspěvek.</h3>
+            <p class="reveal">Díky trvalému příkazu víme, s čím můžeme počítat, a můžeme vzít další kočku z ulice. Už přes 20 lidí nám takhle posílá 100 až 500 Kč měsíčně. Kdyby se jich sešlo sto po 300 Kč, pokryli by všechno krmivo na měsíc.</p>
+            <p class="reveal">Trvalý příkaz si nastavíte za dvě minuty a kdykoli ho můžete zrušit.</p>
+          </div>
+          <ol class="reveal">
+            <li>V internetovém bankovnictví zvolte <strong>Trvalý příkaz</strong>.</li>
+            <li>Číslo účtu: <span class="copy-field">6077760777/2010 <button type="button" data-copy="6077760777/2010">Kopírovat</button></span></li>
+            <li>Zpráva pro příjemce: <span class="copy-field">KOCICI ANDEL <button type="button" data-copy="KOCICI ANDEL">Kopírovat</button></span></li>
+            <li>Zvolte částku a frekvenci <strong>měsíčně</strong>. Děkujeme!</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="kam-jdou-penize" aria-labelledby="penize-nadpis">
+      <div class="wrap">
+        <div class="split split--top">
+          <div>
+            <p class="eyebrow">Kam jdou vaše peníze</p>
+            <h2 id="penize-nadpis" class="reveal">Víc než polovina na krmivo, čtvrtina na veterinu.</h2>
+            <p class="reveal">Z účtu neplatíme žádné mzdy. Všechno, co přijde, jde na kočky. Kontrolovat to můžete sami:</p>
+            <ul class="checklist reveal">
+              <li><span><a href="https://ib.fio.cz/ib/transparent?a=6077760777" target="_blank" rel="noopener">Transparentní účet u Fio banky</a> se všemi platbami</span></li>
+              <li><span><a href="https://www.facebook.com/media/set/?vanity=depozitumchlupnechlup&amp;set=a.3773941716006989" target="_blank" rel="noopener">Účtenky a faktury</a> v albu na Facebooku</span></li>
+              <li><span><a href="https://or.justice.cz/ias/ui/vypis-sl-firma?subjektId=1208050" target="_blank" rel="noopener">Účetní závěrky spolku</a> ve sbírce listin na justice.cz</span></li>
+            </ul>
+            <div class="mailto-box reveal">
+          <h3>Potvrzení o daru pro daňové přiznání</h3>
+          <p>Dar spolku na ochranu zvířat si můžete odečíst od základu daně (pokud za rok darujete alespoň 1 000 Kč). Napište nám do konce ledna své jméno, adresu a e-mail a pošleme vám potvrzení. Do zprávy pro příjemce u platby prosím uveďte své jméno, ať dar dohledáme.</p>
+          <a class="btn btn--ghost" href="mailto:ditau@email.cz?subject=Potvrzen%C3%AD%20o%20daru"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Požádat o potvrzení</a>
+        </div>
+          </div>
+          <figure class="bars reveal">
+          <figcaption class="bars__title">Výdaje za posledních 12 měsíců: přibližně 702 000 Kč</figcaption>
+          <ol class="bars__list">
+            <li class="bars__row" tabindex="0" aria-label="Krmivo: 380 600 Kč, 54 %"><span class="bars__label">Krmivo</span><span class="bars__track"><span class="bars__bar" style="--w:100.0%"></span></span><span class="bars__value">54 %</span><span class="bars__tip" aria-hidden="true">Krmivo: přibližně 380 600 Kč</span></li><li class="bars__row" tabindex="0" aria-label="Veterinární péče: 172 000 Kč, 25 %"><span class="bars__label">Veterinární péče</span><span class="bars__track"><span class="bars__bar" style="--w:45.2%"></span></span><span class="bars__value">25 %</span><span class="bars__tip" aria-hidden="true">Veterinární péče: přibližně 172 000 Kč</span></li><li class="bars__row" tabindex="0" aria-label="Stelivo: 58 600 Kč, 8 %"><span class="bars__label">Stelivo</span><span class="bars__track"><span class="bars__bar" style="--w:15.4%"></span></span><span class="bars__value">8 %</span><span class="bars__tip" aria-hidden="true">Stelivo: přibližně 58 600 Kč</span></li><li class="bars__row" tabindex="0" aria-label="Drogerie a potřeby: 42 800 Kč, 6 %"><span class="bars__label">Drogerie a potřeby</span><span class="bars__track"><span class="bars__bar" style="--w:11.2%"></span></span><span class="bars__value">6 %</span><span class="bars__tip" aria-hidden="true">Drogerie a potřeby: přibližně 42 800 Kč</span></li><li class="bars__row" tabindex="0" aria-label="Doprava (benzín): 23 900 Kč, 3 %"><span class="bars__label">Doprava (benzín)</span><span class="bars__track"><span class="bars__bar" style="--w:6.3%"></span></span><span class="bars__value">3 %</span><span class="bars__tip" aria-hidden="true">Doprava (benzín): přibližně 23 900 Kč</span></li><li class="bars__row" tabindex="0" aria-label="Účetnictví: 9 900 Kč, 1 %"><span class="bars__label">Účetnictví</span><span class="bars__track"><span class="bars__bar" style="--w:2.6%"></span></span><span class="bars__value">1 %</span><span class="bars__tip" aria-hidden="true">Účetnictví: přibližně 9 900 Kč</span></li><li class="bars__row" tabindex="0" aria-label="Ostatní: 14 200 Kč, 2 %"><span class="bars__label">Ostatní</span><span class="bars__track"><span class="bars__bar" style="--w:3.7%"></span></span><span class="bars__value">2 %</span><span class="bars__tip" aria-hidden="true">Ostatní: přibližně 14 200 Kč</span></li>
+          </ol>
+          <p class="note">Podle plateb na transparentním účtu, říjen 2026. Částky jsou zaokrouhlené, rozdělení podle popisu plateb.</p>
+        </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--sand section--tight" aria-labelledby="dekujeme-nadpis">
+      <div class="wrap wrap--narrow center">
+        <p class="eyebrow" style="justify-content:center">Děkujeme</p>
+        <h2 id="dekujeme-nadpis" class="reveal">Pomáhají nám</h2>
+        <p class="lead reveal" style="margin-inline:auto;max-width:60ch"><strong>Město Strakonice</strong>, které s námi má od roku 2024 smlouvu o péči o toulavé a opuštěné kočky, spolek <a href="https://www.pomahejmezviratum.cz/" target="_blank" rel="noopener">Pomáhejme zvířatům</a>, který nám přispěl na krmivo a odchytové pasti, a hlavně stovky lidí, kteří posílají dary, krmení a sdílejí naše kočky.</p>
+      </div>
+    </section>
+
+    <section class="section" id="potreby" aria-labelledby="potreby-nadpis">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Věcné dary</p>
+          <h2 id="potreby-nadpis" class="reveal">Co se v depozitu vždy hodí</h2>
+          <p class="lead reveal">Než něco koupíte, napište nebo zavolejte Ditě. Řekne vám, co zrovna dochází, a domluvíte se na předání.</p>
+        </div>
+        <ul class="wishlist">
+          <li class="reveal"><strong>Stelivo</strong><span>v 10l pytlích, měsíčně jich spotřebujeme kolem padesáti</span></li>
+          <li class="reveal"><strong>Kapsičky, konzervy, paštiky</strong><span>pro koťata i dospělé kočky</span></li>
+          <li class="reveal"><strong>Granule</strong><span>kvalitní, ideálně jedné značky, ať se kočkám nemění strava</span></li>
+          <li class="reveal"><strong>Mléko pro koťata</strong><span>náhražka mateřského mléka pro odstavená koťata</span></li>
+          <li class="reveal"><strong>Antiparazitika</strong><span>odčervovací tablety a kapky proti blechám</span></li>
+          <li class="reveal"><strong>Absorpční podložky a drogerie</strong><span>na čištění klecí a karantény</span></li>
+        </ul>
+        <div class="btn-row">
+          <a class="btn" href="mailto:ditau@email.cz?subject=V%C4%9Bcn%C3%BD%20dar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Domluvit věcný dar</a>
+          <a class="btn btn--ghost" href="tel:+420607707537"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3.5l2 5-2.5 1.5a11 11 0 0 0 6.5 6.5L16 13.5l5 2V19a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>+420 607 707 537</a>
+        </div>
+        <p class="note" style="margin-top:14px">Seznam aktualizován: říjen 2026.</p>
+      </div>
+    </section>
+
+    <section class="section section--sand" id="sdileni" aria-labelledby="sdileni-nadpis">
+      <div class="wrap">
+        <div class="split split--top">
+          <div>
+            <p class="eyebrow">Sdílení</p>
+            <h2 id="sdileni-nadpis" class="reveal">Nic nestojí a pomáhá nejvíc</h2>
+            <p class="reveal">Většina lidí se o útulcích dozví od známých nebo ze sociálních sítí. Kočky, které víc lidí uvidí, najdou domov rychleji.</p>
+            <ul class="checklist reveal">
+              <li><span>Sdílejte jednu kočičku týdně z <a href="https://www.facebook.com/depozitumchlupnechlup" target="_blank" rel="noopener">Facebooku Depozita</a>.</span></li>
+              <li><span>Vytiskněte plakát a pověste ho u veterináře, v obchodě nebo na obecní nástěnce.</span></li>
+              <li><span>Máte web obce, ordinace nebo firmy? Kočky na něj můžete vložit přes Pesweb.cz. <a href="mailto:ditau@email.cz?subject=Inzerce%20ko%C4%8Dek">Napište nám</a>.</span></li>
+            </ul>
+          </div>
+          <div class="quote-card reveal" style="--d:.08s">
+            <h3>Plakát „Hledáme domov“</h3>
+            <p style="color:var(--muted)">A4 s QR kódem, který vede přímo na naše kočky na Peswebu. Stačí vytisknout.</p>
+            <div class="btn-row" style="margin-bottom:24px">
+              <a class="btn" href="plakat.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Otevřít plakát</a>
+            </div>
+            <div class="share" data-share="Depozitum chlup-nechlup ze Strakonic hledá domovy pro kočky z ulice. Podívej se, kdo čeká:" data-url="index.html">
+          <span class="share__label">Sdílet:</span>
+          <button type="button" data-share-native><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span>Sdílet</span></button>
+          <a href="https://www.facebook.com/depozitumchlupnechlup" target="_blank" rel="noopener" data-share-fb><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>Facebook</a>
+          <a href="https://wa.me/" target="_blank" rel="noopener" data-share-wa><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/></svg>WhatsApp</a>
+          <button type="button" data-share-copy><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Kopírovat odkaz</span></button>
+        </div>
+          </div>
         </div>
       </div>
     </section>
@@ -86,26 +195,20 @@
           <a class="help-card reveal" href="kocky-k-adopci.html">
             <div class="help-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg></div>
             <h3>Adopce</h3>
-            <p>Nejlepší pomoc je stabilní a bezpečný domov.</p>
+            <p>Nejlepší pomoc je stabilní a bezpečný domov. Adopce je bez poplatku.</p>
             <span class="help-card__more">Kočky k adopci<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </a>
           <a class="help-card reveal" style="--d:.08s" href="docasna-pece.html">
             <div class="help-card__icon"><svg viewBox="0 0 48 48" aria-hidden="true" fill="currentColor"><ellipse cx="11" cy="20" rx="4.6" ry="6" transform="rotate(-18 11 20)"/><ellipse cx="19.5" cy="11.5" rx="4.8" ry="6.4" transform="rotate(-6 19.5 11.5)"/><ellipse cx="29.5" cy="11.5" rx="4.8" ry="6.4" transform="rotate(6 29.5 11.5)"/><ellipse cx="38" cy="20" rx="4.6" ry="6" transform="rotate(18 38 20)"/><path d="M24.5 22c-6.2 0-12.5 8.6-12.5 13.6 0 4 3.2 5.9 6.6 5.9 2.6 0 4-1.3 5.9-1.3s3.3 1.3 5.9 1.3c3.4 0 6.6-1.9 6.6-5.9C37 30.6 30.7 22 24.5 22z"/></svg></div>
             <h3>Dočasná péče</h3>
-            <p>Dejte zdravé kočce domov, než najde ten trvalý.</p>
+            <p>Dejte zdravé kočce domov, než najde ten trvalý. Náklady hradíme my.</p>
             <span class="help-card__more">Jak to funguje<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </a>
-          <a class="help-card reveal" style="--d:.16s" href="https://www.facebook.com/depozitumchlupnechlup" target="_blank" rel="noopener">
-            <div class="help-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></div>
-            <h3>Sdílení</h3>
-            <p>Sdílejte naše kočičky na Facebooku nebo na inzertních portálech jako Annonce a Bazoš.</p>
-            <span class="help-card__more">Facebook Depozita<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-          </a>
-          <a class="help-card reveal" style="--d:.24s" href="mailto:ditau@email.cz?subject=Inzerce%20ko%C4%8Dek">
+          <a class="help-card reveal" style="--d:.16s" href="nasli-jste-kocku.html">
             <div class="help-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>
-            <h3>Inzerce</h3>
-            <p>Máte web obce, veterinární ordinace nebo firmy? Kočky k adopci na něj můžete vložit přes Pesweb.cz.</p>
-            <span class="help-card__more">Napište nám<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <h3>Hlaste nálezy obci</h3>
+            <p>Každá nahlášená kočka tlačí obce k tomu, aby problém s kočkami začaly řešit.</p>
+            <span class="help-card__more">Jak postupovat<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
           </a>
         </div>
       </div>
@@ -123,7 +226,7 @@
       <div class="footer-grid">
         <div>
           <p class="footer-big">Každá kočka si zaslouží teplé místo.</p>
-          <p style="opacity:.8;max-width:38ch">Domácí soukromé depozitum pro odchyt a léčbu koček ze Strakonic a okolí. Fungujeme jen díky vašim darům.</p>
+          <p style="opacity:.8;max-width:38ch">Domácí depozitum pro odchyt a léčbu koček ze Strakonic a okolí. Fungujeme hlavně díky vašim darům.</p>
           <div class="socials">
             <a href="https://www.facebook.com/depozitumchlupnechlup" target="_blank" rel="noopener" aria-label="Facebook Depozita"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg></a>
             <a href="https://www.instagram.com/chlupnechlup/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg></a>
@@ -140,13 +243,14 @@
             <li><a href="nasli-jste-kocku.html">Našli jste kočku?</a></li>
             <li><a href="o-nas.html">O nás</a></li>
             <li><a href="podporte-nas.html">Podpořte nás</a></li>
+            <li><a href="plakat.html">Plakát k vytištění</a></li>
           </ul>
         </div>
         <div>
           <h4>Kontakt</h4>
           <ul>
-            <li>Depozitum chlup-nechlup</li>
-            <li>Strakonice</li>
+            <li>Mutěnice u Strakonic</li>
+            <li>Návštěvy jen po domluvě</li>
             <li><a href="tel:+420607707537">+420 607 707 537</a></li>
             <li><a href="mailto:ditau@email.cz">ditau@email.cz</a></li>
           </ul>
@@ -161,8 +265,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span data-year>2026</span> Depozitum chlup-nechlup</span>
-        <span>Kočky k adopci zveřejňujeme přes <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Pesweb.cz</a></span>
+        <span>© <span data-year>2026</span> Depozitum chlup - nechlup z.s. · IČO 19405901 · sídlo Mutěnice 70, 386 01 Mutěnice · spolek zapsaný ve spolkovém rejstříku u Krajského soudu v Českých Budějovicích, oddíl L, vložka 9221</span>
+        <span><a href="soukromi.html">Soukromí a cookies</a> · Kočky k adopci zveřejňujeme přes <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Pesweb.cz</a></span>
       </div>
     </div>
   </footer>

@@ -28,28 +28,6 @@
     });
   }
 
-  /* ---------- Kopírování čísla účtu ---------- */
-  document.querySelectorAll("[data-copy]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var text = btn.getAttribute("data-copy");
-      var label = btn.querySelector("span");
-      var original = label ? label.textContent : "";
-      var done = function () {
-        btn.classList.add("copy-done");
-        if (label) label.textContent = "Zkopírováno";
-        setTimeout(function () {
-          btn.classList.remove("copy-done");
-          if (label) label.textContent = original;
-        }, 2200);
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done, function () { window.prompt("Číslo účtu:", text); });
-      } else {
-        window.prompt("Číslo účtu:", text);
-      }
-    });
-  });
-
   /* ---------- Rozdělení prohlášení na slova ---------- */
   var statements = [].slice.call(document.querySelectorAll("[data-words]"));
   statements.forEach(function (el) {
@@ -96,14 +74,15 @@
   var runCounter = function (el) {
     var target = parseFloat(el.getAttribute("data-count"));
     var suffix = el.getAttribute("data-suffix") || "";
-    if (reduceMotion) { el.textContent = target + suffix; return; }
+    var fmt = function (n) { return n.toLocaleString("cs-CZ"); };
+    if (reduceMotion) { el.textContent = fmt(target) + suffix; return; }
     var start = null;
     var dur = 1600;
     var step = function (t) {
       if (!start) start = t;
       var k = Math.min(1, (t - start) / dur);
       var eased = 1 - Math.pow(1 - k, 4);
-      el.textContent = Math.round(target * eased) + suffix;
+      el.textContent = fmt(Math.round(target * eased)) + suffix;
       if (k < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -213,6 +192,128 @@
     steps.forEach(function (s) { s.classList.add("is-active"); });
     if (slides[0]) slides[0].classList.add("is-active");
   }
+
+  /* ---------- Widget Pesweb: načte se, až když je na dohled ---------- */
+  var peswebScript = null;
+  var loadPesweb = function (cb) {
+    if (window.PeswebWidget) { cb(); return; }
+    if (!peswebScript) {
+      peswebScript = document.createElement("script");
+      peswebScript.src = "https://www.pesweb.cz/widget/pesweb-widget.min.js";
+      peswebScript.async = true;
+      document.head.appendChild(peswebScript);
+    }
+    peswebScript.addEventListener("load", cb);
+  };
+  var initWidget = function (el) {
+    if (el._ready) return;
+    el._ready = true;
+    loadPesweb(function () {
+      try {
+        var cfg = JSON.parse(el.getAttribute("data-pesweb"));
+        cfg.container = el;
+        window.PeswebWidget.init(cfg);
+      } catch (e) { /* zůstane záložní odkaz */ }
+    });
+  };
+  var widgets = [].slice.call(document.querySelectorAll("[data-pesweb]"));
+  if ("IntersectionObserver" in window) {
+    var wio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting && !entry.target.closest("[hidden]")) { initWidget(entry.target); wio.unobserve(entry.target); }
+      });
+    }, { rootMargin: "600px 0px" });
+    widgets.forEach(function (el) { wio.observe(el); });
+  } else {
+    widgets.forEach(initWidget);
+  }
+
+  /* ---------- Záložky ---------- */
+  document.querySelectorAll("[role='tablist']").forEach(function (list) {
+    var tabs = [].slice.call(list.querySelectorAll("[role='tab']"));
+    var select = function (tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        var panel = document.getElementById(t.getAttribute("aria-controls"));
+        if (panel) panel.hidden = !on;
+        if (on && panel) panel.querySelectorAll("[data-pesweb]").forEach(initWidget);
+      });
+    };
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { select(t); });
+      t.addEventListener("keydown", function (e) {
+        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (!d) return;
+        var next = tabs[(i + d + tabs.length) % tabs.length];
+        select(next);
+        next.focus();
+      });
+    });
+  });
+
+  /* ---------- Volba částky daru: přepne QR kód a popis ---------- */
+  document.querySelectorAll("[data-amounts]").forEach(function (box) {
+    var buttons = [].slice.call(box.querySelectorAll("[data-amount]"));
+    var card = box.closest(".account");
+    var qr = card && card.querySelector(".account__qr img");
+    var caption = card && card.querySelector(".account__qr span");
+    var impact = card && card.querySelector(".impact");
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        buttons.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        var amount = b.getAttribute("data-amount");
+        if (qr) {
+          qr.src = b.getAttribute("data-qr");
+          qr.alt = amount ? "QR platba " + amount + " Kč na transparentní účet" : "QR platba na transparentní účet";
+        }
+        if (caption) caption.textContent = amount ? "QR platba " + amount + " Kč" : "QR platba, částku zadáte v aplikaci banky";
+        if (impact) impact.innerHTML = b.getAttribute("data-impact");
+      });
+    });
+  });
+
+  /* ---------- Sdílení ---------- */
+  document.querySelectorAll("[data-share]").forEach(function (box) {
+    var url = box.getAttribute("data-url") ? new URL(box.getAttribute("data-url"), location.href).href : location.href.split("#")[0];
+    var text = box.getAttribute("data-share") || document.title;
+    var fb = box.querySelector("[data-share-fb]");
+    var wa = box.querySelector("[data-share-wa]");
+    var native = box.querySelector("[data-share-native]");
+    var copy = box.querySelector("[data-share-copy]");
+    if (fb) fb.href = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url);
+    if (wa) wa.href = "https://wa.me/?text=" + encodeURIComponent(text + " " + url);
+    if (native) {
+      if (navigator.share) {
+        native.addEventListener("click", function () { navigator.share({ title: document.title, text: text, url: url }).catch(function () {}); });
+      } else {
+        native.hidden = true;
+      }
+    }
+    if (copy) copy.setAttribute("data-copy", url);
+  });
+
+  /* ---------- Kopírování (číslo účtu, odkazy) ---------- */
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    if (btn._copyBound) return;
+    btn._copyBound = true;
+    btn.addEventListener("click", function () {
+      var text = btn.getAttribute("data-copy");
+      var label = btn.querySelector("span") || btn;
+      var original = label.textContent;
+      var done = function () {
+        btn.classList.add("copy-done");
+        label.textContent = "Zkopírováno";
+        setTimeout(function () { btn.classList.remove("copy-done"); label.textContent = original; }, 2200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { window.prompt("Zkopírujte:", text); });
+      } else {
+        window.prompt("Zkopírujte:", text);
+      }
+    });
+  });
 
   /* ---------- Rok v patičce ---------- */
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });

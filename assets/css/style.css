@@ -577,3 +577,118 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 .found-steps--plain .found-step { text-align: center; }
 .found-steps--plain a.phone { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem); word-break: break-word; }
 .widget-note { margin: 12px 0 0; text-align: center; font-size: 0.9rem; color: var(--muted); }
+
+/* ==========================================================================
+   Rozšíření podle průzkumu: výzva, záložky, dary s částkou, galerie, sdílení
+   ========================================================================== */
+
+.hero-trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 22px 0 0; padding: 0; list-style: none; font-size: 0.92rem; color: var(--muted); font-weight: 600; }
+.hero-trust li { display: inline-flex; align-items: center; gap: 8px; }
+.hero-trust li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sage); }
+
+/* Výzva „Aktuálně“ */
+.appeal { display: grid; grid-template-columns: 220px 1fr auto; gap: clamp(20px, 3vw, 36px); align-items: center; padding: clamp(18px, 2.4vw, 28px); border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.appeal__media { border-radius: calc(var(--radius-lg) - 10px); overflow: hidden; aspect-ratio: 1; background: var(--sand); }
+.appeal__media img { width: 100%; height: 100%; object-fit: cover; }
+.appeal__badge { display: inline-flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #b4231a; background: #fde6e2; padding: 6px 12px; border-radius: 999px; margin-bottom: 12px; }
+.appeal__badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.appeal h2 { font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem); margin-bottom: 0.3em; }
+.appeal p { color: var(--muted); margin: 0; max-width: 60ch; }
+.appeal__actions { display: flex; flex-direction: column; gap: 10px; min-width: 220px; }
+@media (max-width: 960px) { .appeal { grid-template-columns: 160px 1fr; } .appeal__actions { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; min-width: 0; } }
+@media (max-width: 560px) { .appeal { grid-template-columns: 1fr; } .appeal__media { aspect-ratio: 4/3; } }
+
+/* Záložky nad widgetem */
+.tabs { display: inline-flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--sand); margin-bottom: 22px; flex-wrap: wrap; }
+.tabs button { border: 0; background: transparent; color: var(--text); font: 700 0.98rem/1 var(--font-body); padding: 12px 18px; border-radius: 999px; cursor: pointer; min-height: 44px; transition: background 0.2s, color 0.2s; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--accent-strong); box-shadow: 0 2px 10px -4px rgba(43, 33, 27, 0.3); }
+.tab-panel[hidden] { display: none; }
+.tab-panel .tab-intro { color: var(--muted); margin: 0 0 16px; max-width: 64ch; }
+
+/* Widget Pesweb je vždy na světlém podkladu */
+.widget-shell { background: var(--paper); }
+
+/* Kroky procesu */
+.process { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: pr; list-style: none; margin: 0; padding: 0; }
+.process li { counter-increment: pr; position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 22px 22px; }
+.process li::before { content: counter(pr); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font: 700 1.1rem/1 var(--font-display); margin-bottom: 16px; }
+.process li:not(:last-child)::after { content: ""; position: absolute; top: 48px; right: -18px; width: 18px; height: 2px; background: var(--line); }
+.process h3 { font-size: 1.25rem; margin-bottom: 0.35em; }
+.process p { color: var(--muted); font-size: 0.97rem; margin: 0; }
+@media (max-width: 960px) { .process { grid-template-columns: 1fr 1fr; } .process li::after { display: none; } }
+@media (max-width: 560px) { .process { grid-template-columns: 1fr; } }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 24px; padding: 0; list-style: none; }
+.pill-row li { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; background: var(--sage-soft); font-weight: 700; font-size: 0.95rem; }
+.pill-row li svg { width: 18px; height: 18px; color: var(--sage); }
+
+/* Dar s volbou částky */
+.amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 4px 0 14px; }
+.amounts button { min-height: 48px; border-radius: 14px; border: 2px solid rgba(43, 33, 27, 0.16); background: #fff; color: var(--ink); font: 800 1rem/1 var(--font-body); cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; font-variant-numeric: tabular-nums; }
+.amounts button:hover { border-color: var(--ginger); }
+.amounts button[aria-pressed="true"] { background: var(--ginger); border-color: var(--ginger); color: #fffaf2; }
+.impact { min-height: 3em; margin: 0 0 16px; font-size: 0.95rem; color: var(--ink-soft); }
+.impact strong { color: var(--ink); }
+@media (max-width: 480px) { .amounts { grid-template-columns: repeat(2, 1fr); } }
+
+.monthly { margin-top: clamp(28px, 4vw, 44px); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: start; padding-top: clamp(28px, 4vw, 44px); border-top: 1px solid rgba(247, 240, 229, 0.16); }
+.monthly h3 { color: var(--on-dark); font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); }
+.monthly p { color: color-mix(in srgb, var(--on-dark) 80%, transparent); }
+.monthly ol { margin: 0; padding-left: 1.2em; color: color-mix(in srgb, var(--on-dark) 86%, transparent); display: grid; gap: 8px; }
+.monthly ol li::marker { color: var(--butter); font-weight: 800; }
+.copy-field { display: inline-flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 10px; background: rgba(247, 240, 229, 0.1); font-weight: 700; font-variant-numeric: tabular-nums; }
+.copy-field button { border: 0; border-radius: 8px; padding: 6px 10px; background: rgba(247, 240, 229, 0.18); color: inherit; font: 700 0.8rem/1 var(--font-body); cursor: pointer; }
+.copy-field button.copy-done { background: var(--sage); }
+@media (max-width: 860px) { .monthly { grid-template-columns: 1fr; } }
+
+/* Galerie „Domov našli“ */
+.gallery { columns: 4 220px; column-gap: 14px; }
+.gallery figure { break-inside: avoid; margin: 0 0 14px; position: relative; border-radius: var(--radius); overflow: hidden; background: var(--sand); }
+.gallery img { width: 100%; height: auto; transition: transform 0.6s cubic-bezier(.2,.8,.2,1); }
+.gallery figure:hover img { transform: scale(1.04); }
+.gallery figcaption { position: absolute; left: 10px; bottom: 10px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 250, 242, 0.94); color: var(--ink); font-size: 0.82rem; font-weight: 700; }
+.gallery figcaption::before { content: "♥ "; color: var(--ginger); }
+.big-number { font-family: var(--font-display); font-weight: 600; font-size: clamp(4rem, 2.6rem + 7vw, 9rem); line-height: 0.9; letter-spacing: -0.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+/* Sdílení */
+.share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.share__label { font-weight: 700; margin-right: 4px; }
+.share a, .share button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: 700 0.92rem/1 var(--font-body); text-decoration: none; cursor: pointer; }
+.share a:hover, .share button:hover { border-color: var(--text); color: var(--text); }
+.share svg { width: 18px; height: 18px; }
+.share .copy-done { color: #fff; }
+.section--dark .share a, .section--dark .share button { background: rgba(247, 240, 229, 0.08); color: var(--on-dark); border-color: rgba(247, 240, 229, 0.2); }
+
+/* Seznam potřeb */
+.wishlist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0 0 18px; }
+.wishlist li { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.wishlist strong { display: block; font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 4px; }
+.wishlist span { color: var(--muted); font-size: 0.95rem; }
+
+.note { font-size: 0.9rem; color: var(--muted); }
+.mailto-box { background: var(--sage-soft); border-radius: var(--radius); padding: 22px 24px; }
+.mailto-box h3 { font-size: 1.3rem; }
+
+/* Graf výdajů: jedna barva, popisky u pruhů, tooltip při najetí */
+:root { --chart-bar: #d4612a; --chart-track: rgba(43, 33, 27, 0.07); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart-bar: #e0703a; --chart-track: rgba(243, 234, 220, 0.08); } }
+:root[data-theme="dark"] { --chart-bar: #e0703a; --chart-track: rgba(243, 234, 220, 0.08); }
+.bars { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(20px, 3vw, 32px); }
+.bars__title { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin-bottom: 18px; }
+.bars__list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }
+.bars__row { position: relative; display: grid; grid-template-columns: minmax(110px, 38%) 1fr 48px; gap: 12px; align-items: center; padding: 8px 6px; border-radius: 10px; outline-offset: 2px; }
+.bars__row:hover, .bars__row:focus-visible { background: var(--chart-track); }
+.bars__label { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.bars__track { height: 12px; }
+.bars__bar { display: block; height: 100%; width: var(--w); min-width: 4px; background: var(--chart-bar); border-radius: 0 4px 4px 0; transform-origin: 0 50%; transform: scaleX(0); transition: transform 1s cubic-bezier(.2,.8,.2,1); }
+.bars.is-in .bars__bar, .js-off .bars__bar { transform: none; }
+.bars__row:nth-child(2) .bars__bar { transition-delay: .06s; } .bars__row:nth-child(3) .bars__bar { transition-delay: .12s; } .bars__row:nth-child(4) .bars__bar { transition-delay: .18s; } .bars__row:nth-child(5) .bars__bar { transition-delay: .24s; } .bars__row:nth-child(6) .bars__bar { transition-delay: .3s; } .bars__row:nth-child(7) .bars__bar { transition-delay: .36s; }
+.bars__value { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); }
+.bars__tip { position: absolute; right: 56px; bottom: calc(100% - 4px); z-index: 2; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: #fffaf2; font-size: 0.82rem; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity 0.15s, transform 0.15s; }
+.bars__row:hover .bars__tip, .bars__row:focus-visible .bars__tip { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .bars__bar { transform: none; } }
+@media (max-width: 480px) { .bars__row { grid-template-columns: 1fr 44px; } .bars__track { grid-column: 1 / -1; grid-row: 2; } .bars__tip { right: 6px; } }
+.amounts button { white-space: nowrap; font-size: 0.92rem; padding: 0 6px; }
+.hero-trust { animation: fade-in 0.9s 0.35s both; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(12px); } }

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="cs" class="js-off">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plakát k vytištění · Depozitum chlup-nechlup Strakonice</title>
+  <meta name="description" content="Plakát A4 s QR kódem na kočky k adopci z Depozita chlup-nechlup.">
+  <meta name="theme-color" content="#f7f0e5">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Depozitum chlup-nechlup">
+  <meta property="og:title" content="Plakát k vytištění · Depozitum chlup-nechlup Strakonice">
+  <meta property="og:description" content="Plakát A4 s QR kódem na kočky k adopci z Depozita chlup-nechlup.">
+  <meta property="og:image" content="assets/img/kocka-tuxedo.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/fraunces-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .poster { max-width: 794px; margin: 0 auto; aspect-ratio: 210 / 297; background: #fffaf2; color: #2b211b; border-radius: 24px; box-shadow: var(--shadow); padding: 48px; display: flex; flex-direction: column; overflow: hidden; }
+    .poster__photos { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 10px; height: 34%; margin-bottom: 28px; }
+    .poster__photos img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
+    .poster__eyebrow { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: .8rem; color: #a8441a; margin: 0 0 10px; }
+    .poster__title { font-size: clamp(2rem, 6vw, 3.6rem); margin: 0 0 16px; color: #2b211b; }
+    .poster__lead { font-size: 1.15rem; margin: 0 0 auto; color: #5d4f45; }
+    .poster__bottom { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: center; border-top: 2px dashed rgba(43,33,27,.2); padding-top: 24px; margin-top: 24px; }
+    .poster__qr { background: #fff; padding: 8px; border-radius: 12px; }
+    .poster__qr img { width: 100%; height: auto; }
+    .poster__big { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; margin: 0 0 4px; }
+    .poster__bottom p { margin: 0 0 6px; }
+    .poster__phone { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: #a8441a; }
+    .poster__phone svg { width: 26px; height: 26px; }
+    @media (max-width: 600px) { .poster { padding: 22px; aspect-ratio: auto; } .poster__bottom { grid-template-columns: 110px 1fr; } .poster__phone { font-size: 1.25rem; } }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { background: #fff; }
+      .site-header, .site-footer, .progress, .skip-link, .no-print { display: none !important; }
+      .poster-wrap { padding: 0 !important; }
+      .poster-wrap .wrap { padding: 0; max-width: none; }
+      .poster { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; max-width: none; aspect-ratio: auto; padding: 16mm; }
+      .poster__phone { font-size: 2.2rem; }
+      .poster__title { font-size: 3.6rem; }
+      .poster__lead { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+  <div class="progress" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html" aria-label="Depozitum chlup-nechlup — úvod">
+        <svg viewBox="0 0 48 48" aria-hidden="true" fill="currentColor"><ellipse cx="11" cy="20" rx="4.6" ry="6" transform="rotate(-18 11 20)"/><ellipse cx="19.5" cy="11.5" rx="4.8" ry="6.4" transform="rotate(-6 19.5 11.5)"/><ellipse cx="29.5" cy="11.5" rx="4.8" ry="6.4" transform="rotate(6 29.5 11.5)"/><ellipse cx="38" cy="20" rx="4.6" ry="6" transform="rotate(18 38 20)"/><path d="M24.5 22c-6.2 0-12.5 8.6-12.5 13.6 0 4 3.2 5.9 6.6 5.9 2.6 0 4-1.3 5.9-1.3s3.3 1.3 5.9 1.3c3.4 0 6.6-1.9 6.6-5.9C37 30.6 30.7 22 24.5 22z"/></svg>
+        <span>chlup-nechlup<small>Depozitum pro kočky · Strakonice</small></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hlavni-menu" aria-label="Menu"><span></span></button>
+      <nav class="nav" id="hlavni-menu" aria-label="Hlavní menu">
+        <a href="kocky-k-adopci.html">Kočky k adopci</a>
+        <a href="nasli-domov.html">Domov našli</a>
+        <a href="docasna-pece.html">Dočasná péče</a>
+        <a href="nasli-jste-kocku.html">Našli jste kočku?</a>
+        <a href="o-nas.html">O nás</a>
+        <a class="btn" href="podporte-nas.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.3-9.6C1.5 7.4 3.8 4 7.3 4c2 0 3.6 1.1 4.7 2.7C13.1 5.1 14.7 4 16.7 4c3.5 0 5.8 3.4 4.6 6.9-1.8 5.2-9.3 9.6-9.3 9.6z"/></svg>Podpořit</a>
+      </nav>
+    </div>
+  </header>
+  <main id="obsah">
+
+    <section class="page-hero no-print">
+      <div class="wrap">
+        <p class="eyebrow">Plakát k vytištění</p>
+        <h1>Pověste kočky tam, kde je lidé uvidí.</h1>
+        <p class="lead">U veterináře, v obchodě, na obecní nástěnce nebo v práci. QR kód vede přímo na naše kočky k adopci.</p>
+        <div class="btn-row"><button class="btn" type="button" onclick="window.print()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Vytisknout plakát</button></div>
+      </div>
+    </section>
+
+    <section class="section section--tight poster-wrap" style="padding-top:0">
+      <div class="wrap">
+        <article class="poster">
+          <div class="poster__photos">
+            <img src="assets/img/domov/ludvik-lucian.jpg" alt="">
+            <img src="assets/img/kocka-tuxedo.jpg" alt="">
+            <img src="assets/img/domov/xia.jpg" alt="">
+          </div>
+          <p class="poster__eyebrow">Depozitum chlup-nechlup · Strakonice</p>
+          <h2 class="poster__title">Hledáme domov<br>pro kočky z ulice</h2>
+          <p class="poster__lead">Desítky koček a koťat z okolí Strakonic čekají na svého člověka. Jsou ošetřené, dospělé kočky kastrované. <strong>Adopce je bez poplatku.</strong></p>
+          <div class="poster__bottom">
+            <div class="poster__qr"><img src="assets/img/qr-pesweb.svg" alt="QR kód na kočky k adopci na Pesweb.cz"></div>
+            <div>
+              <p class="poster__big">Naskenujte a vyberte si</p>
+              <p>www.pesweb.cz/cz/depozitum-chlup-nechlup</p>
+              <p class="poster__phone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3.5l2 5-2.5 1.5a11 11 0 0 0 6.5 6.5L16 13.5l5 2V19a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>+420 607 707 537</p>
+              <p>Hledáme i dočasné péče a dárce. Transparentní účet 6077760777/2010</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-big">Každá kočka si zaslouží teplé místo.</p>
+          <p style="opacity:.8;max-width:38ch">Domácí depozitum pro odchyt a léčbu koček ze Strakonic a okolí. Fungujeme hlavně díky vašim darům.</p>
+          <div class="socials">
+            <a href="https://www.facebook.com/depozitumchlupnechlup" target="_blank" rel="noopener" aria-label="Facebook Depozita"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg></a>
+            <a href="https://www.instagram.com/chlupnechlup/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="mailto:ditau@email.cz" aria-label="E-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h4>Web</h4>
+          <ul>
+            <li><a href="index.html">Úvod</a></li>
+            <li><a href="kocky-k-adopci.html">Kočky k adopci</a></li>
+            <li><a href="nasli-domov.html">Domov našli</a></li>
+            <li><a href="docasna-pece.html">Dočasná péče</a></li>
+            <li><a href="nasli-jste-kocku.html">Našli jste kočku?</a></li>
+            <li><a href="o-nas.html">O nás</a></li>
+            <li><a href="podporte-nas.html">Podpořte nás</a></li>
+            <li><a href="plakat.html">Plakát k vytištění</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Kontakt</h4>
+          <ul>
+            <li>Mutěnice u Strakonic</li>
+            <li>Návštěvy jen po domluvě</li>
+            <li><a href="tel:+420607707537">+420 607 707 537</a></li>
+            <li><a href="mailto:ditau@email.cz">ditau@email.cz</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Transparentní účet</h4>
+          <ul>
+            <li><strong>6077760777/2010</strong></li>
+            <li>Fio banka</li>
+            <li><a href="https://ib.fio.cz/ib/transparent?a=6077760777" target="_blank" rel="noopener">Pohyby na účtu</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> Depozitum chlup - nechlup z.s. · IČO 19405901 · sídlo Mutěnice 70, 386 01 Mutěnice · spolek zapsaný ve spolkovém rejstříku u Krajského soudu v Českých Budějovicích, oddíl L, vložka 9221</span>
+        <span><a href="soukromi.html">Soukromí a cookies</a> · Kočky k adopci zveřejňujeme přes <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Pesweb.cz</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

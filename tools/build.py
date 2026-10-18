@@ -1,19 +1,113 @@
 #!/usr/bin/env python3
-"""Sestaví statické HTML stránky webu Depozitum chlup-nechlup do repozitáře."""
+"""Sestaví statické HTML stránky webu Depozitum chlup-nechlup.
+
+Spuštění:  python3 tools/build.py
+Texty, kontakty a čísla se mění tady v souboru, HTML se pak vygeneruje znovu.
+QR kódy se přegenerují jen tehdy, když je nainstalovaný balíček `qrcode`
+(pip install qrcode); jinak se použijí ty, které už jsou v assets/img.
+"""
+import json
 import pathlib
 import sys
 
 OUT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
 
+# ---------------------------------------------------------------------------
+# Kontakty a údaje
+# ---------------------------------------------------------------------------
+
+ORG_NAME = "Depozitum chlup - nechlup z.s."
+ORG_ICO = "19405901"
+ORG_SEAT = "Mutěnice 70, 386 01 Mutěnice"
+ORG_REG = "spolek zapsaný ve spolkovém rejstříku u Krajského soudu v Českých Budějovicích, oddíl L, vložka 9221"
+JUSTICE_DOCS = "https://or.justice.cz/ias/ui/vypis-sl-firma?subjektId=1208050"
+CITY_CATS = "https://www.strakonice.eu/nalezenekocky"
+
 PHONE = "+420 607 707 537"
 PHONE_TEL = "+420607707537"
 EMAIL = "ditau@email.cz"
 ACCOUNT = "6077760777/2010"
+IBAN = "CZ6120100000006077760777"
+IBAN_PRETTY = "CZ61 2010 0000 0060 7776 0777"
 FIO = "https://ib.fio.cz/ib/transparent?a=6077760777"
 FB = "https://www.facebook.com/depozitumchlupnechlup"
 FB_DITA = "https://www.facebook.com/dita.uhrikova/"
+FB_RECEIPTS = "https://www.facebook.com/media/set/?vanity=depozitumchlupnechlup&amp;set=a.3773941716006989"
+FB_ALBUM = "https://www.facebook.com/media/set/?set=a.2506635422737631&amp;type=3"
 IG = "https://www.instagram.com/chlupnechlup/"
 PESWEB = "https://www.pesweb.cz/cz/depozitum-chlup-nechlup"
+PESWEB_CAT = "https://www.pesweb.cz/kocky-k-adopci/"
+
+# Čísla z Pesweb.cz (stav k datu níže). Aktualizujte podle Peswebu.
+ADOPTED = 396
+LISTED = 65
+STATS_DATE = "říjen 2026"
+
+# Výzva nahoře na úvodní stránce. None = nezobrazovat.
+APPEAL = {
+    "badge": "Akutní adopce",
+    "name": "Celesta",
+    "slug": "celesta",
+    "image": "assets/img/celesta.jpg",
+    "title": "Celesta hledá domov co nejdřív.",
+    "text": "Trpělivá, statečná, hravá a čistotná. Od kotěte si toho hodně vytrpěla, má zdeformovanou nožičku a léčí se s dásněmi po extrakci zubů. Přesto baští a užívá si život. Hledá bezpečný domov v bytě nebo v domku s chráněnou zahradou.",
+}
+
+# Částky pro QR platbu a co za ně depozitum pořídí (podle skutečných plateb z transparentního účtu).
+AMOUNTS = [
+    (300, "<strong>300 Kč</strong> = tři desetilitrové pytle steliva. Jeden nás vyjde na 89 Kč."),
+    (500, "<strong>500 Kč</strong> = krmení pro celé depozitum na půl dne. Za rok kočky spořádají krmivo za 380 000 Kč."),
+    (1500, "<strong>1 500 Kč</strong> = kastrace jedné kočky u našeho veterináře i s kapkami proti parazitům (poslední faktura 1 385 Kč)."),
+    (None, "<strong>Jakákoli částka</strong> pomáhá. Den provozu depozita stojí necelé 2 000 Kč."),
+]
+DEFAULT_AMOUNT = 500
+
+# Kam šly peníze za posledních 12 měsíců (výdaje z transparentního účtu, přibližně, říjen 2025 – říjen 2026).
+SPENDING_TOTAL = 702_000
+SPENDING = [
+    ("Krmivo", 380_600),
+    ("Veterinární péče", 172_000),
+    ("Stelivo", 58_600),
+    ("Drogerie a potřeby", 42_800),
+    ("Doprava (benzín)", 23_900),
+    ("Účetnictví", 9_900),
+    ("Ostatní", 14_200),
+]
+CITY_MONTHLY = 20_000
+
+# Co se v depozitu vždy hodí. Upravte podle aktuální potřeby.
+WISHLIST = [
+    ("Stelivo", "v 10l pytlích, měsíčně jich spotřebujeme kolem padesáti"),
+    ("Kapsičky, konzervy, paštiky", "pro koťata i dospělé kočky"),
+    ("Granule", "kvalitní, ideálně jedné značky, ať se kočkám nemění strava"),
+    ("Mléko pro koťata", "náhražka mateřského mléka pro odstavená koťata"),
+    ("Antiparazitika", "odčervovací tablety a kapky proti blechám"),
+    ("Absorpční podložky a drogerie", "na čištění klecí a karantény"),
+]
+WISHLIST_DATE = STATS_DATE
+
+GALLERY = [
+    ("ludvik-lucian", "Ludvík a Lucián", 720, 646),
+    ("xia", "Xia", 540, 720),
+    ("bozanek", "Božánek", 720, 540),
+    ("rekord-manka", "Rekordmanka", 536, 720),
+    ("wilson", "Wilson", 720, 540),
+    ("zoltan-zoro", "Zoltán a Zoro", 540, 720),
+    ("cernobila", "Černobílá", 720, 540),
+    ("hasa-a-harf", "Haša a Harf", 542, 720),
+    ("yasmin-yanis-yann-yoniel", "Yasmin, Yanis, Yann a Yoniel", 720, 540),
+    ("iska", "Iška", 536, 720),
+    ("tri-gracie-z-protivina", "Tři grácie z Protivína", 720, 405),
+    ("janek-3984", "Janek", 540, 720),
+    ("zimba", "Zimba", 720, 480),
+    ("hanah", "Hanah", 536, 720),
+    ("muning-micah", "Muning a Micah", 720, 540),
+    ("3-smolari", "3 Smolaři", 540, 720),
+    ("filipek-6301", "Filípek", 539, 720),
+    ("wega-zamluvena", "Wega", 540, 720),
+    ("zrzavy-krasavec", "Zrzavý krasavec", 540, 720),
+    ("tara-trina-a-tristan", "Tara, Trina a Tristan", 540, 720),
+]
 
 ICON = {
     "paw": '<svg viewBox="0 0 48 48" aria-hidden="true" fill="currentColor"><ellipse cx="11" cy="20" rx="4.6" ry="6" transform="rotate(-18 11 20)"/><ellipse cx="19.5" cy="11.5" rx="4.8" ry="6.4" transform="rotate(-6 19.5 11.5)"/><ellipse cx="29.5" cy="11.5" rx="4.8" ry="6.4" transform="rotate(6 29.5 11.5)"/><ellipse cx="38" cy="20" rx="4.6" ry="6" transform="rotate(18 38 20)"/><path d="M24.5 22c-6.2 0-12.5 8.6-12.5 13.6 0 4 3.2 5.9 6.6 5.9 2.6 0 4-1.3 5.9-1.3s3.3 1.3 5.9 1.3c3.4 0 6.6-1.9 6.6-5.9C37 30.6 30.7 22 24.5 22z"/></svg>',
@@ -21,15 +115,20 @@ ICON = {
     "heart": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.3-9.6C1.5 7.4 3.8 4 7.3 4c2 0 3.6 1.1 4.7 2.7C13.1 5.1 14.7 4 16.7 4c3.5 0 5.8 3.4 4.6 6.9-1.8 5.2-9.3 9.6-9.3 9.6z"/></svg>',
     "home": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>',
     "coin": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10.5h19M6.5 15h3"/></svg>',
+    "repeat": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
     "share": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>',
     "copy": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
     "external": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     "phone": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3.5l2 5-2.5 1.5a11 11 0 0 0 6.5 6.5L16 13.5l5 2V19a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>',
     "mail": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>',
     "fb": '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>',
+    "wa": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/></svg>',
     "ig": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>',
     "search": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+    "print": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>',
+    "check": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
 }
+PAW_PATHS = ICON["paw"][ICON["paw"].index(">") + 1:-6]
 
 NAV = [
     ("kocky-k-adopci.html", "Kočky k adopci"),
@@ -39,16 +138,33 @@ NAV = [
     ("o-nas.html", "O nás"),
 ]
 
+# Písma jsou hostovaná lokálně (assets/fonts), aby web neposílal IP adresy návštěvníků Googlu.
 FONTS = (
-    '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
-    '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-    '  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;'
-    'family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..700,100,0..1;1,9..144,500..700,100,0..1&amp;display=swap" rel="stylesheet">'
+    '<link rel="preload" href="assets/fonts/fraunces-normal-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
+    '  <link rel="stylesheet" href="assets/fonts/fonts.css">'
 )
 
+JSONLD = json.dumps({
+    "@context": "https://schema.org",
+    "@type": "AnimalShelter",
+    "name": "Depozitum chlup-nechlup",
+    "legalName": ORG_NAME,
+    "taxID": ORG_ICO,
+    "description": "Domácí depozitum pro odchyt, léčbu a kastraci koček ze Strakonic a okolí.",
+    "address": {"@type": "PostalAddress", "addressLocality": "Mutěnice", "postalCode": "386 01", "addressRegion": "Jihočeský kraj", "addressCountry": "CZ"},
+    "areaServed": "Strakonice a okolí",
+    "telephone": PHONE,
+    "email": EMAIL,
+    "sameAs": [FB, IG, PESWEB],
+}, ensure_ascii=False)
 
-def head(title, desc, current):
-    full = title if current == "index.html" else f"{title} · Depozitum chlup-nechlup"
+
+# ---------------------------------------------------------------------------
+# Společné části
+# ---------------------------------------------------------------------------
+
+def head(title, desc, current, extra_head=""):
+    full = title if current == "index.html" else f"{title} · Depozitum chlup-nechlup Strakonice"
     return f"""<!doctype html>
 <html lang="cs" class="js-off">
 <head>
@@ -63,9 +179,10 @@ def head(title, desc, current):
   <meta property="og:title" content="{full}">
   <meta property="og:description" content="{desc}">
   <meta property="og:image" content="assets/img/kocka-tuxedo.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   {FONTS}
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/style.css">{extra_head}
 </head>
 <body>
   <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
@@ -76,9 +193,9 @@ def head(title, desc, current):
 
 
 def header(current):
+    cur = ' aria-current="page"'
     links = "\n".join(
-        f'        <a href="{href}"{" aria-current=\"page\"" if href == current else ""}>{label}</a>'
-        for href, label in NAV
+        f'        <a href="{href}"{cur if href == current else ""}>{label}</a>' for href, label in NAV
     )
     return f"""  <header class="site-header">
     <div class="wrap">
@@ -89,7 +206,7 @@ def header(current):
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hlavni-menu" aria-label="Menu"><span></span></button>
       <nav class="nav" id="hlavni-menu" aria-label="Hlavní menu">
 {links}
-        <a class="btn" href="podporte-nas.html"{" aria-current=\"page\"" if current == "podporte-nas.html" else ""}>{ICON["heart"]}Podpořit</a>
+        <a class="btn" href="podporte-nas.html"{cur if current == "podporte-nas.html" else ""}>{ICON["heart"]}Podpořit</a>
       </nav>
     </div>
   </header>"""
@@ -104,7 +221,7 @@ def footer():
       <div class="footer-grid">
         <div>
           <p class="footer-big">Každá kočka si zaslouží teplé místo.</p>
-          <p style="opacity:.8;max-width:38ch">Domácí soukromé depozitum pro odchyt a léčbu koček ze Strakonic a okolí. Fungujeme jen díky vašim darům.</p>
+          <p style="opacity:.8;max-width:38ch">Domácí depozitum pro odchyt a léčbu koček ze Strakonic a okolí. Fungujeme hlavně díky vašim darům.</p>
           <div class="socials">
             <a href="{FB}" target="_blank" rel="noopener" aria-label="Facebook Depozita">{ICON["fb"]}</a>
             <a href="{IG}" target="_blank" rel="noopener" aria-label="Instagram">{ICON["ig"]}</a>
@@ -117,13 +234,14 @@ def footer():
             <li><a href="index.html">Úvod</a></li>
 {nav}
             <li><a href="podporte-nas.html">Podpořte nás</a></li>
+            <li><a href="plakat.html">Plakát k vytištění</a></li>
           </ul>
         </div>
         <div>
           <h4>Kontakt</h4>
           <ul>
-            <li>Depozitum chlup-nechlup</li>
-            <li>Strakonice</li>
+            <li>Mutěnice u Strakonic</li>
+            <li>Návštěvy jen po domluvě</li>
             <li><a href="tel:{PHONE_TEL}">{PHONE}</a></li>
             <li><a href="mailto:{EMAIL}">{EMAIL}</a></li>
           </ul>
@@ -138,8 +256,8 @@ def footer():
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span data-year>2026</span> Depozitum chlup-nechlup</span>
-        <span>Kočky k adopci zveřejňujeme přes <a href="{PESWEB}" target="_blank" rel="noopener">Pesweb.cz</a></span>
+        <span>© <span data-year>2026</span> {ORG_NAME} · IČO {ORG_ICO} · sídlo {ORG_SEAT} · {ORG_REG}</span>
+        <span><a href="soukromi.html">Soukromí a cookies</a> · Kočky k adopci zveřejňujeme přes <a href="{PESWEB}" target="_blank" rel="noopener">Pesweb.cz</a></span>
       </div>
     </div>
   </footer>
@@ -150,46 +268,124 @@ def footer():
 """
 
 
-def widget(container, filters, layout=None):
-    """Vloží widget Pesweb.cz se seznamem koček, barevně sladěný s webem."""
-    import json
+def widget(filters, layout=None, reveal=True):
+    """Widget Pesweb.cz se seznamem koček. Skript načte main.js, až když je widget na dohled."""
     cfg = {
-        "container": f"#{container}",
         "baseUrl": "https://www.pesweb.cz",
         "type": "cat",
-        "filters": filters,
+        "filters": {"shelter": "depozitum-chlup-nechlup", **filters},
         "height": "auto",
         "theme": {"primaryColor": "#d4612a", "backgroundColor": "#fffaf2", "textColor": "#2b211b", "borderRadius": "16px"},
     }
     if layout:
         cfg["layout"] = layout
-    return f"""<div class="widget-shell reveal">
-          <div id="{container}">
+    data = json.dumps(cfg, ensure_ascii=False).replace("'", "&#39;")
+    return f"""<div class="widget-shell{" reveal" if reveal else ""}">
+          <div data-pesweb='{data}'>
             <p class="widget-fallback">Načítáme kočičky… Pokud se seznam nezobrazí, najdete je přímo na <a href="{PESWEB}" target="_blank" rel="noopener">Pesweb.cz</a>.</p>
           </div>
         </div>
-        <p class="widget-note">Seznam se nenačetl? <a href="{PESWEB}" target="_blank" rel="noopener">Otevřete naše kočky na Pesweb.cz</a></p>
-        <script src="https://www.pesweb.cz/widget/pesweb-widget.min.js"></script>
-        <script>
-          if (window.PeswebWidget) PeswebWidget.init({json.dumps(cfg, ensure_ascii=False)});
-        </script>"""
+        <p class="widget-note">Seznam se nenačetl? <a href="{PESWEB}" target="_blank" rel="noopener">Otevřete naše kočky na Pesweb.cz</a></p>"""
+
+
+def share(text, url="", label="Sdílet:"):
+    """Tlačítka pro sdílení. Adresa stránky se doplní v prohlížeči."""
+    url_attr = f' data-url="{url}"' if url else ""
+    return f"""<div class="share" data-share="{text}"{url_attr}>
+          <span class="share__label">{label}</span>
+          <button type="button" data-share-native>{ICON["share"]}<span>Sdílet</span></button>
+          <a href="{FB}" target="_blank" rel="noopener" data-share-fb>{ICON["fb"]}Facebook</a>
+          <a href="https://wa.me/" target="_blank" rel="noopener" data-share-wa>{ICON["wa"]}WhatsApp</a>
+          <button type="button" data-share-copy>{ICON["copy"]}<span>Kopírovat odkaz</span></button>
+        </div>"""
+
+
+def qr_file(amount):
+    return f"assets/img/qr-platba-{amount}.svg" if amount else "assets/img/qr-platba.svg"
 
 
 def account_card(extra_class=""):
+    buttons = []
+    default_impact = AMOUNTS[0][1]
+    for amount, impact in AMOUNTS:
+        pressed = "true" if amount == DEFAULT_AMOUNT else "false"
+        if amount == DEFAULT_AMOUNT:
+            default_impact = impact
+        label = f"{amount:,} Kč".replace(",", " ") if amount else "Jiná"
+        buttons.append(
+            f'<button type="button" data-amount="{amount or ""}" data-qr="{qr_file(amount)}" '
+            f'data-impact="{impact.replace(chr(34), "&quot;")}" aria-pressed="{pressed}">{label}</button>'
+        )
     return f"""<div class="account {extra_class}" data-progress>
           <div>
             <div class="account__label">Transparentní účet · Fio banka</div>
             <div class="account__number">{ACCOUNT}</div>
-            <div class="account__meta">Depozitum chlup-nechlup · IBAN CZ61 2010 0000 0060 7776 0777</div>
+            <div class="account__meta">{ORG_NAME} · IBAN {IBAN_PRETTY}</div>
+            <div class="amounts" data-amounts role="group" aria-label="Částka daru">
+              {"".join(buttons)}
+            </div>
+            <p class="impact" aria-live="polite">{default_impact}</p>
             <div class="btn-row">
-              <button class="btn" type="button" data-copy="{ACCOUNT}">{ICON["copy"]}<span>Kopírovat číslo</span></button>
+              <button class="btn" type="button" data-copy="{ACCOUNT}">{ICON["copy"]}<span>Kopírovat číslo účtu</span></button>
               <a class="btn btn--ghost" href="{FIO}" target="_blank" rel="noopener">Pohyby na účtu{ICON["external"]}</a>
             </div>
           </div>
           <div class="account__qr">
-            <img src="assets/img/qr-platba.svg" alt="QR platba na transparentní účet {ACCOUNT}" width="130" height="130">
-            QR platba — částku zadáte v aplikaci banky
+            <img src="{qr_file(DEFAULT_AMOUNT)}" alt="QR platba {DEFAULT_AMOUNT} Kč na transparentní účet" width="130" height="130">
+            <span>QR platba {DEFAULT_AMOUNT} Kč</span>
           </div>
+        </div>"""
+
+
+def monthly_block():
+    return f"""<div class="monthly">
+          <div>
+            <p class="eyebrow">Kočičí andělé</p>
+            <h3 class="reveal">Nejvíc pomůže pravidelný příspěvek.</h3>
+            <p class="reveal">Díky trvalému příkazu víme, s čím můžeme počítat, a můžeme vzít další kočku z ulice. Už přes 20 lidí nám takhle posílá 100 až 500 Kč měsíčně. Kdyby se jich sešlo sto po 300 Kč, pokryli by všechno krmivo na měsíc.</p>
+            <p class="reveal">Trvalý příkaz si nastavíte za dvě minuty a kdykoli ho můžete zrušit.</p>
+          </div>
+          <ol class="reveal">
+            <li>V internetovém bankovnictví zvolte <strong>Trvalý příkaz</strong>.</li>
+            <li>Číslo účtu: <span class="copy-field">{ACCOUNT} <button type="button" data-copy="{ACCOUNT}">Kopírovat</button></span></li>
+            <li>Zpráva pro příjemce: <span class="copy-field">KOCICI ANDEL <button type="button" data-copy="KOCICI ANDEL">Kopírovat</button></span></li>
+            <li>Zvolte částku a frekvenci <strong>měsíčně</strong>. Děkujeme!</li>
+          </ol>
+        </div>"""
+
+
+def fmt_kc(n):
+    return f"{n:,}".replace(",", " ") + " Kč"
+
+
+def spending_chart():
+    """Pruhový graf výdajů (jedna barva, popisky přímo u pruhů, tooltip s částkou)."""
+    top = max(v for _, v in SPENDING)
+    rows = []
+    for label, value in SPENDING:
+        share = value / SPENDING_TOTAL * 100
+        pct = f"{share:.0f} %" if share >= 1 else "<1 %"
+        rows.append(
+            f'<li class="bars__row" tabindex="0" aria-label="{label}: {fmt_kc(value)}, {pct}">'
+            f'<span class="bars__label">{label}</span>'
+            f'<span class="bars__track"><span class="bars__bar" style="--w:{value / top * 100:.1f}%"></span></span>'
+            f'<span class="bars__value">{pct}</span>'
+            f'<span class="bars__tip" aria-hidden="true">{label}: přibližně {fmt_kc(value)}</span></li>'
+        )
+    return f"""<figure class="bars reveal">
+          <figcaption class="bars__title">Výdaje za posledních 12 měsíců: přibližně {fmt_kc(SPENDING_TOTAL)}</figcaption>
+          <ol class="bars__list">
+            {"".join(rows)}
+          </ol>
+          <p class="note">Podle plateb na transparentním účtu, {STATS_DATE}. Částky jsou zaokrouhlené, rozdělení podle popisu plateb.</p>
+        </figure>"""
+
+
+def tax_box():
+    return f"""<div class="mailto-box reveal">
+          <h3>Potvrzení o daru pro daňové přiznání</h3>
+          <p>Dar spolku na ochranu zvířat si můžete odečíst od základu daně (pokud za rok darujete alespoň 1 000 Kč). Napište nám do konce ledna své jméno, adresu a e-mail a pošleme vám potvrzení. Do zprávy pro příjemce u platby prosím uveďte své jméno, ať dar dohledáme.</p>
+          <a class="btn btn--ghost" href="mailto:{EMAIL}?subject=Potvrzen%C3%AD%20o%20daru">{ICON["mail"]}Požádat o potvrzení</a>
         </div>"""
 
 
@@ -200,14 +396,94 @@ def cta_band(title, text, href, label):
             <p>{text}</p>
           </div>
           <a class="btn" href="{href}">{label}{ICON["arrow"]}</a>
-          <svg class="paw-bg" viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">{ICON["paw"][ICON["paw"].index(">") + 1:-6]}</svg>
+          <svg class="paw-bg" viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">{PAW_PATHS}</svg>
         </div>"""
 
 
-def page(name, title, desc, body):
-    html = head(title, desc, name) + body + footer()
+def gallery(items):
+    figs = "\n".join(
+        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{name}, kočka, která už našla domov" width="{w}" height="{h}" loading="lazy"><figcaption>{name}</figcaption></figure>'
+        for i, (slug, name, w, h) in enumerate(items)
+    )
+    return f'<div class="gallery">\n{figs}\n        </div>'
+
+
+def appeal_block():
+    if not APPEAL:
+        return ""
+    a = APPEAL
+    return f"""
+    <section class="section--tight" style="padding-top:0;padding-bottom:clamp(40px,6vw,72px)" aria-labelledby="vyzva-nadpis">
+      <div class="wrap">
+        <div class="appeal reveal">
+          <div class="appeal__media"><img src="{a["image"]}" alt="{a["name"]}" loading="lazy"></div>
+          <div>
+            <span class="appeal__badge">{a["badge"]}</span>
+            <h2 id="vyzva-nadpis">{a["title"]}</h2>
+            <p>{a["text"]}</p>
+          </div>
+          <div class="appeal__actions">
+            <a class="btn" href="{PESWEB_CAT}{a["slug"]}" target="_blank" rel="noopener">Profil: {a["name"]}{ICON["external"]}</a>
+            <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}Zavolat Ditě</a>
+            <a class="btn btn--ghost" href="{FB}" target="_blank" rel="noopener">{ICON["share"]}Sdílet na FB</a>
+          </div>
+        </div>
+      </div>
+    </section>"""
+
+
+def adoption_mailto(cat=""):
+    from urllib.parse import quote
+    subject = f"Zájem o adopci{' – ' + cat if cat else ''}"
+    body = (
+        "Dobrý den,\n\nmám zájem o adopci kočičky.\n\n"
+        "O kterou kočičku jde: \n"
+        "Bydlím v (byt / dům / dům se zahradou): \n"
+        "Kdo s námi bydlí (děti a jejich věk, pes, další kočky): \n"
+        "Zkušenosti s kočkami: \n"
+        "Bude kočka chodit ven? \n"
+        "Co od kočičky očekáváme: \n"
+        "Můj telefon: \n\nDěkuji"
+    )
+    return f"mailto:{EMAIL}?subject={quote(subject)}&amp;body={quote(body)}"
+
+
+def foster_mailto():
+    from urllib.parse import quote
+    body = (
+        "Dobrý den,\n\nzajímá mě dočasná péče.\n\n"
+        "Bydlím v (byt / dům): \n"
+        "Mám samostatnou místnost pro kočku (ano / ne): \n"
+        "Doma mám zvířata (jaká): \n"
+        "Na jak dlouho můžu kočku vzít: \n"
+        "Můj telefon: \n\nDěkuji"
+    )
+    return f"mailto:{EMAIL}?subject={quote('Dočasná péče')}&amp;body={quote(body)}"
+
+
+def page(name, title, desc, body, extra_head=""):
+    html = head(title, desc, name, extra_head) + body + footer()
     (OUT / name).write_text(html, encoding="utf-8")
     print("wrote", name, len(html))
+
+
+def make_qr():
+    try:
+        import qrcode
+        import qrcode.image.svg
+    except ImportError:
+        print("qrcode není nainstalovaný, QR kódy se nepřegenerují")
+        return
+    codes = {f"qr-platba-{a}.svg" if a else "qr-platba.svg": f"SPD*1.0*ACC:{IBAN}*{'AM:' + str(a) + '.00*' if a else ''}RN:DEPOZITUM CHLUP-NECHLUP*MSG:DAR PRO KOCKY*CC:CZK" for a, _ in AMOUNTS}
+    codes["qr-pesweb.svg"] = PESWEB
+    for name, data in codes.items():
+        img = qrcode.make(data, image_factory=qrcode.image.svg.SvgPathImage, box_size=10, border=2)
+        path = OUT / "assets/img" / name
+        img.save(str(path))
+        svg = path.read_text(encoding="utf-8")
+        svg = svg.replace('width="', 'data-w="', 1).replace('height="', 'data-h="', 1)
+        path.write_text(svg, encoding="utf-8")
+    print("QR kódy:", ", ".join(codes))
 
 
 # ---------------------------------------------------------------------------
@@ -224,29 +500,61 @@ INDEX = f"""
           <p class="lead reveal" style="--d:.16s">Odchytáváme, léčíme a kastrujeme toulavé kočky ze Strakonic a okolí. Pak jim hledáme lidi, kteří je budou mít rádi napořád.</p>
           <div class="btn-row reveal" style="--d:.24s">
             <a class="btn" href="kocky-k-adopci.html">Chci adoptovat{ICON["arrow"]}</a>
-            <a class="btn btn--ghost" href="#pomoc">Jak můžu pomoct</a>
+            <a class="btn btn--ghost" href="#pomoc">Chci pomoct</a>
           </div>
+          <ul class="hero-trust">
+            <li>{ADOPTED} koček už našlo domov</li>
+            <li>Adopce bez poplatku</li>
+            <li>Transparentní účet</li>
+          </ul>
         </div>
         <div class="collage reveal reveal--scale" style="--d:.1s" aria-hidden="true">
           <figure class="c1"><img src="assets/img/kocka-tuxedo.jpg" alt="" width="959" height="652" fetchpriority="high"></figure>
           <figure class="c2"><img src="assets/img/xantipa.jpg" alt="" width="527" height="938"></figure>
           <figure class="c3"><img src="assets/img/eliot-a-emil.jpg" alt="" width="960" height="720"></figure>
-          <div class="sticker"><span><strong>100+</strong>koček ročně projde depozitem</span></div>
+          <div class="sticker"><span><strong>{LISTED}</strong>inzerátů právě hledá domov</span></div>
         </div>
       </div>
-      <a class="scroll-cue" href="#pribeh"><i></i>Scrollujte</a>
+      <a class="scroll-cue" href="#kocky"><i></i>Scrollujte</a>
+    </section>
+{appeal_block()}
+
+    <section class="section section--tight" id="kocky" aria-labelledby="adopce-nadpis" style="padding-top:clamp(24px,4vw,48px)">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Hledají domov</p>
+          <h2 id="adopce-nadpis" class="reveal">Možná na vás čeká právě teď.</h2>
+          <p class="lead reveal" style="--d:.08s">Seznam se načítá živě z portálu Pesweb.cz. Zaujala vás některá? Ozvěte se Ditě a domluvíte se na seznámení.</p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Výběr koček">
+          <button type="button" role="tab" id="tab-cekaji" aria-controls="panel-cekaji" aria-selected="true">Čekají nejdéle</button>
+          <button type="button" role="tab" id="tab-nove" aria-controls="panel-nove" aria-selected="false" tabindex="-1">Nově v depozitu</button>
+        </div>
+        <div class="tab-panel" id="panel-cekaji" role="tabpanel" aria-labelledby="tab-cekaji">
+          <p class="tab-intro">Tyhle kočky jsou u nás nejdéle, některé i několik let. Často jsou to dospělé, plaché nebo starší kočky, které potřebují trpělivého člověka. Odmění se mu ale celou duší.</p>
+          {widget({"sort": "foundDate:asc"}, {"itemsPerPage": 6}, reveal=False)}
+        </div>
+        <div class="tab-panel" id="panel-nove" role="tabpanel" aria-labelledby="tab-nove" hidden>
+          <p class="tab-intro">Nejnovější přírůstky, které už prošly karanténou a hledají domov. Na jaře a v létě jsou to hlavně koťata.</p>
+          {widget({"sort": "createdAt:desc"}, {"itemsPerPage": 6}, reveal=False)}
+        </div>
+        <div class="btn-row" style="margin-top:28px">
+          <a class="btn" href="kocky-k-adopci.html">Všech {LISTED} inzerátů a jak adopce probíhá{ICON["arrow"]}</a>
+        </div>
+      </div>
     </section>
 
     <section class="section section--tight" id="pribeh">
       <div class="wrap">
         <p class="eyebrow">Kdo jsme</p>
-        <p class="statement" data-words>Jsme malé domácí depozitum, ne městský útulek. Nikdo nás nezřizuje ani nefinancuje — <em>každou kastraci a každé ošetření</em> platíme z vašich darů.</p>
+        <p class="statement" data-words>Jsme malé domácí depozitum, ne velký útulek. Město nám přispívá zhruba třetinou, <em>zbytek každé kastrace a každého ošetření</em> platíte vy.</p>
         <div class="stats">
-          <div class="stat reveal"><div class="stat__num" data-count="10" data-suffix="+">10+</div><div class="stat__label">let pomáháme kočkám v nouzi</div></div>
-          <div class="stat reveal" style="--d:.08s"><div class="stat__num" data-count="20">20</div><div class="stat__label">míst v depozitu, rozdělených podle místa nálezu</div></div>
-          <div class="stat reveal" style="--d:.16s"><div class="stat__num" data-count="120">120</div><div class="stat__label">koček se u nás ročně vystřídá</div></div>
-          <div class="stat reveal" style="--d:.24s"><div class="stat__num" data-count="0" data-suffix=" Kč">0 Kč</div><div class="stat__label">dostáváme od města nebo státu</div></div>
+          <div class="stat reveal"><div class="stat__num" data-count="{ADOPTED}">{ADOPTED}</div><div class="stat__label">koček našlo domov přes Pesweb.cz</div></div>
+          <div class="stat reveal" style="--d:.08s"><div class="stat__num" data-count="{LISTED}">{LISTED}</div><div class="stat__label">inzerátů teď hledá domov, často celé vrhy koťat</div></div>
+          <div class="stat reveal" style="--d:.16s"><div class="stat__num" data-count="20">20</div><div class="stat__label">míst v depozitu, rozdělených podle místa nálezu</div></div>
+          <div class="stat reveal" style="--d:.24s"><div class="stat__num" data-count="1900">1 900</div><div class="stat__label">Kč stojí jeden den provozu: krmivo, veterina, stelivo</div></div>
         </div>
+        <p class="note" style="margin-top:16px">Čísla z Pesweb.cz a z transparentního účtu, {STATS_DATE}.</p>
       </div>
     </section>
 
@@ -291,40 +599,12 @@ INDEX = f"""
               <img class="mobile-img" src="assets/img/kote-choi.jpg" alt="Kotě Choi v novém domově" loading="lazy">
               <h3>Nový domov</h3>
               <p>Hledáme pro každou kočku spřízněnou duši: stabilní a bezpečný domov na adopční smlouvu. A uvolněné místo hned obsadí další kočka z ulice.</p>
-              <div class="btn-row"><a class="btn" href="kocky-k-adopci.html">Kdo hledá domov{ICON["arrow"]}</a></div>
+              <div class="btn-row"><a class="btn" href="#kocky">Kdo hledá domov{ICON["arrow"]}</a></div>
             </li>
           </ol>
         </div>
       </div>
     </section>
-
-    <section class="section" aria-labelledby="adopce-nadpis">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Hledají domov</p>
-          <h2 id="adopce-nadpis" class="reveal">Možná na vás čeká právě teď.</h2>
-          <p class="lead reveal" style="--d:.08s">Aktuální seznam koček k adopci se načítá přímo z portálu Pesweb.cz. Zaujala vás některá? Ozvěte se Ditě a domluvíte se na seznámení.</p>
-        </div>
-        {widget("pesweb-uvod", {"shelter": "depozitum-chlup-nechlup"}, {"itemsPerPage": 6})}
-        <div class="btn-row" style="margin-top:28px">
-          <a class="btn" href="kocky-k-adopci.html">Všechny kočky a podmínky adopce{ICON["arrow"]}</a>
-          <a class="btn btn--ghost" href="nasli-domov.html">Kdo už domov našel</a>
-        </div>
-      </div>
-    </section>
-
-    <div class="marquee" data-marquee aria-hidden="true">
-      <div class="marquee__track">
-        <div class="marquee__item"><img src="assets/img/falca.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/kote-choi-2.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/mourek.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/xantipa.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/cassie.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/kocka-tuxedo.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/eliot-a-emil.jpg" alt="" loading="lazy"></div>
-        <div class="marquee__item"><img src="assets/img/kocka-cerna.jpg" alt="" loading="lazy"></div>
-      </div>
-    </div>
 
     <section class="section" id="pomoc" aria-labelledby="pomoc-nadpis">
       <div class="wrap">
@@ -337,26 +617,26 @@ INDEX = f"""
           <a class="help-card reveal" href="kocky-k-adopci.html">
             <div class="help-card__icon">{ICON["home"]}</div>
             <h3>Adoptujte</h3>
-            <p>Dejte kočce stabilní a bezpečný domov. Pomůžeme vám vybrat tu, která sedne k vaší domácnosti.</p>
-            <span class="help-card__more">Kočky k adopci{ICON["arrow"]}</span>
+            <p>Dejte kočce stabilní a bezpečný domov. Adopce je bez poplatku a pomůžeme vám vybrat kočku, která sedne k vaší domácnosti.</p>
+            <span class="help-card__more">Jak adopce probíhá{ICON["arrow"]}</span>
           </a>
           <a class="help-card reveal" style="--d:.08s" href="docasna-pece.html">
             <div class="help-card__icon">{ICON["paw"]}</div>
             <h3>Dočasná péče</h3>
-            <p>Vezměte si domů zdravou kočku, než najde nový domov. Krmení, stelivo i veterinu hradí depozitum.</p>
+            <p>Mějte kočku doma bez závazku na celý život. Krmení, stelivo i veterinu hradí depozitum, Dita je vám na telefonu.</p>
             <span class="help-card__more">Jak funguje dočaska{ICON["arrow"]}</span>
           </a>
-          <a class="help-card reveal" style="--d:.16s" href="podporte-nas.html">
-            <div class="help-card__icon">{ICON["coin"]}</div>
-            <h3>Přispějte</h3>
-            <p>Kastrace, léky, krmení. Bez pravidelných dárců by depozitum nemohlo fungovat. Účet je transparentní.</p>
-            <span class="help-card__more">Transparentní účet{ICON["arrow"]}</span>
+          <a class="help-card reveal" style="--d:.16s" href="#dar">
+            <div class="help-card__icon">{ICON["repeat"]}</div>
+            <h3>Kočičí anděl</h3>
+            <p>Pravidelný příspěvek trvalým příkazem nám pomáhá nejvíc. I 200 Kč měsíčně je znát. Účet je transparentní.</p>
+            <span class="help-card__more">Nastavit trvalý příkaz{ICON["arrow"]}</span>
           </a>
-          <a class="help-card reveal" style="--d:.24s" href="{FB}" target="_blank" rel="noopener">
+          <a class="help-card reveal" style="--d:.24s" href="podporte-nas.html#sdileni">
             <div class="help-card__icon">{ICON["share"]}</div>
             <h3>Sdílejte</h3>
-            <p>Sdílejte kočičky na Facebooku, Annonce nebo Bazoši. Nabídněte inzerci na webu obce či veterináře.</p>
-            <span class="help-card__more">Facebook Depozita{ICON["arrow"]}</span>
+            <p>Většina lidí se o nás dozví od známých. Sdílejte kočičky, pověste plakát u veterináře nebo na obecní nástěnce.</p>
+            <span class="help-card__more">Plakát a sdílení{ICON["arrow"]}</span>
           </a>
         </div>
       </div>
@@ -368,22 +648,43 @@ INDEX = f"""
           <div>
             <p class="eyebrow">Finanční dar</p>
             <h2 id="dar-nadpis" class="reveal">Každá koruna jde na kočky. A je to vidět.</h2>
-            <p class="lead reveal" style="--d:.08s">Spravujeme transparentní účet u Fio banky, takže každý pohyb si můžete zkontrolovat. Účtenky a faktury z nákupů navíc sdílíme na Facebooku.</p>
-            <a class="btn btn--light reveal" style="--d:.16s" href="podporte-nas.html">Další způsoby podpory{ICON["arrow"]}</a>
+            <p class="lead reveal" style="--d:.08s">Z účtu neplatíme žádné mzdy, peníze jdou na krmivo, veterinu a stelivo. Účet je transparentní, každý pohyb si můžete zkontrolovat, a účtenky z nákupů sdílíme na Facebooku.</p>
+            <p class="reveal" style="--d:.12s;opacity:.85">Vyberte částku, naskenujte QR kód v aplikaci své banky a je hotovo.</p>
           </div>
           {account_card("reveal")}
         </div>
+        {monthly_block()}
       </div>
     </section>
 
-    <section class="section" aria-labelledby="nalez-nadpis">
+    <section class="section" aria-labelledby="domov-nadpis">
+      <div class="wrap">
+        <div class="split" style="margin-bottom:clamp(32px,5vw,56px)">
+          <div>
+            <p class="eyebrow">Domov našli</p>
+            <div class="big-number reveal" data-count="{ADOPTED}">{ADOPTED}</div>
+            <h2 id="domov-nadpis" class="reveal" style="margin-top:.2em">koček už má svého člověka.</h2>
+          </div>
+          <div>
+            <p class="lead reveal">Za každým číslem je kočka, která začínala ve slepičárně, ve sklepě nebo u silnice. Dnes spí na gauči. Všem novým páníčkům děkujeme.</p>
+            <a class="btn btn--ghost reveal" href="nasli-domov.html">Další šťastné konce{ICON["arrow"]}</a>
+          </div>
+        </div>
+        {gallery(GALLERY[:8])}
+      </div>
+    </section>
+
+    <section class="section section--sand" aria-labelledby="nalez-nadpis">
       <div class="wrap">
         <div class="split split--top">
           <div>
             <p class="eyebrow">Našli jste kočku?</p>
             <h2 id="nalez-nadpis" class="reveal">Nejdřív volejte obec. Ze zákona.</h2>
             <p class="lead reveal" style="--d:.08s">Obec má povinnost postarat se o toulavé zvíře, o kočku stejně jako o psa (§ 1058 občanského zákoníku). Každá nenahlášená kočka znamená, že obec „problém s kočkami nemá“.</p>
-            <a class="btn btn--ghost reveal" style="--d:.16s" href="nasli-jste-kocku.html">Celý postup krok za krokem{ICON["arrow"]}</a>
+            <div class="btn-row reveal" style="--d:.16s">
+              <a class="btn btn--ghost" href="nasli-jste-kocku.html">Celý postup krok za krokem{ICON["arrow"]}</a>
+              <a class="btn btn--ghost" href="nasli-jste-kocku.html#ztracena">Ztratila se vám kočka?</a>
+            </div>
           </div>
           <div class="found-steps" style="grid-template-columns:1fr">
             <div class="found-step reveal"><h3>Městská policie</h3><p>Kde ji mají, volejte <a href="tel:156"><strong>156</strong></a>. Vždy na místě nálezu, ne do jiného města.</p></div>
@@ -394,10 +695,10 @@ INDEX = f"""
       </div>
     </section>
 
-    <section class="section section--sand" aria-labelledby="dita-nadpis">
+    <section class="section" aria-labelledby="dita-nadpis">
       <div class="wrap">
         <div class="split">
-          <div class="split__media reveal" data-progress><img src="assets/img/kocka-tuxedo.jpg" alt="Černobílá kočka odpočívá na dece v depozitu" loading="lazy"></div>
+          <div class="split__media reveal" data-progress><img src="assets/img/kocka-tuxedo.jpg" alt="Černobílá kočka Zina odpočívá na dece v depozitu" loading="lazy"></div>
           <div>
             <p class="eyebrow">Srdce depozita</p>
             <h2 id="dita-nadpis" class="reveal">Za vším stojí Dita.</h2>
@@ -412,7 +713,7 @@ INDEX = f"""
       </div>
     </section>
 
-    <section class="section section--tight" id="kontakt" aria-labelledby="kontakt-nadpis">
+    <section class="section section--tight section--sand" id="kontakt" aria-labelledby="kontakt-nadpis">
       <div class="wrap">
         <div class="section-head section-head--center">
           <p class="eyebrow">Kontakt</p>
@@ -435,16 +736,43 @@ INDEX = f"""
 ADOPCE = f"""
     <section class="page-hero">
       <div class="wrap">
-        <p class="eyebrow reveal">Kočky k adopci</p>
+        <p class="eyebrow reveal">Kočky k adopci · Strakonice</p>
         <h1 class="reveal" style="--d:.06s">Najděte svou <span class="accent-word">spřízněnou duši</span>.</h1>
-        <p class="lead reveal" style="--d:.12s">Tady jsou všichni naši svěřenci, kteří hledají domov. Seznam se načítá z portálu Pesweb.cz, díky kterému můžeme kočky sdílet i na webech obcí a veterinářů.</p>
+        <p class="lead reveal" style="--d:.12s">Adopce je bez poplatku. Chceme jen jedno: aby kočka našla stabilní a bezpečný domov, ve kterém zůstane napořád.</p>
+        <ul class="pill-row reveal" style="--d:.18s">
+          <li>{ICON["check"]}Bez poplatku</li>
+          <li>{ICON["check"]}Dospělé kočky odcházejí kastrované</li>
+          <li>{ICON["check"]}Na adopční smlouvu</li>
+          <li>{ICON["check"]}Poradíme i po adopci</li>
+        </ul>
       </div>
     </section>
 
-    <section class="section section--tight" style="padding-top:0">
+    <section class="section section--tight" style="padding-top:0" aria-labelledby="postup-nadpis">
       <div class="wrap">
-        {widget("pesweb-adopce", {"shelter": "depozitum-chlup-nechlup"})}
-        <p class="center" style="margin-top:20px;color:var(--muted)">Další fotky najdete v <a href="https://www.facebook.com/media/set/?set=a.2506635422737631&amp;type=3" target="_blank" rel="noopener">albu na Facebooku</a>. Nejnovější přírůstky sdílí Dita na <a href="{FB_DITA}" target="_blank" rel="noopener">svém profilu</a>.</p>
+        <h2 id="postup-nadpis" class="visually-hidden">Jak adopce probíhá</h2>
+        <ol class="process">
+          <li class="reveal"><h3>Vyberte si</h3><p>Prohlédněte si kočky níže nebo v <a href="{FB_ALBUM}" target="_blank" rel="noopener">albu na Facebooku</a>. Klidně i víc, poradíme, která k vám sedne.</p></li>
+          <li class="reveal" style="--d:.06s"><h3>Ozvěte se Ditě</h3><p>Zavolejte na <a href="tel:{PHONE_TEL}">{PHONE}</a> nebo napište e-mail. Řekněte nám něco o své domácnosti.</p></li>
+          <li class="reveal" style="--d:.12s"><h3>Seznamte se</h3><p>Domluvíte si návštěvu a kočičku poznáte osobně. Dejte si čas na rozmyšlenou.</p></li>
+          <li class="reveal" style="--d:.18s"><h3>Cesta domů</h3><p>Podepíšeme adopční smlouvu a kočička jede domů. Pokud si nebudete vědět rady, jsme tu dál.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section section--tight" style="padding-top:0" aria-label="Kočky k adopci">
+      <div class="wrap">
+        <div class="tabs" role="tablist" aria-label="Řazení koček">
+          <button type="button" role="tab" id="tab-vse" aria-controls="panel-vse" aria-selected="true">Nejnovější</button>
+          <button type="button" role="tab" id="tab-dlouho" aria-controls="panel-dlouho" aria-selected="false" tabindex="-1">Čekají nejdéle</button>
+        </div>
+        <div class="tab-panel" id="panel-vse" role="tabpanel" aria-labelledby="tab-vse">
+          {widget({"sort": "createdAt:desc"}, reveal=False)}
+        </div>
+        <div class="tab-panel" id="panel-dlouho" role="tabpanel" aria-labelledby="tab-dlouho" hidden>
+          <p class="tab-intro">Dospělé, plaché a starší kočky čekají nejdéle. Přitom bývají klidnější a víte přesně, jakou povahu si domů berete.</p>
+          {widget({"sort": "foundDate:asc"}, reveal=False)}
+        </div>
       </div>
     </section>
 
@@ -452,24 +780,28 @@ ADOPCE = f"""
       <div class="wrap">
         <div class="split split--top">
           <div>
-            <p class="eyebrow">Podmínky adopce</p>
-            <h2 class="reveal">Než si pro kočičku přijedete</h2>
-            <p class="reveal">Chcete si pořídit kočičku a pomoct některé z depozita? To je výborná zpráva pro všechny. I pro kočičky, které teprve čekají na ulici, až se v depozitu uvolní teplé místečko.</p>
+            <p class="eyebrow">Než se ozvete</p>
+            <h2 class="reveal">Pár všetečných otázek</h2>
             <ul class="checklist reveal">
-              <li><span>Kočky vydáváme na <strong>adopční smlouvu</strong>, ve které se zavazujete poskytnout kočce stabilní a bezpečný domov.</span></li>
-              <li><span>U koťat se zavazujete ke <strong>kastraci v dospělosti</strong>.</span></li>
-              <li><span>Prosíme o <strong>závazné rozhodnutí</strong>. Dejte si čas na rozmyšlenou, kočička u nás pár dní i týdnů v pořádku vydrží.</span></li>
-            </ul>
-          </div>
-          <div class="quote-card reveal" style="--d:.1s">
-            <h3>Pár všetečných otázek</h3>
-            <ul class="checklist" style="margin-bottom:1rem">
               <li><span>Máte nachystaná škrabadla, misky a záchůdky?</span></li>
               <li><span>Spočítali jste si, kolik vyjde kvalitní krmení a veterina?</span></li>
               <li><span>Máte zabezpečený balkon a okna?</span></li>
               <li><span>Víte, kdo se o kočičku postará, když budete na dovolené?</span></li>
             </ul>
-            <p style="margin:0;color:var(--muted)">Napište nám, do jakého prostředí kočičku chcete, kdo s vámi sdílí domácnost (pes, další kočka, jak staré děti) a co od ní očekáváte. Uděláme maximum, abychom vám našli perfektní spřízněnou duši.</p>
+            <p class="reveal">Kočky vydáváme na <strong>adopční smlouvu</strong>, ve které se zavazujete poskytnout kočce stabilní a bezpečný domov. U koťat se zavazujete ke <strong>kastraci v dospělosti</strong>. Prosíme o závazné rozhodnutí; kočička u nás pár dní i týdnů v pořádku vydrží.</p>
+          </div>
+          <div class="mailto-box reveal" style="--d:.1s">
+            <h3>Napište nám o sobě</h3>
+            <p>Připravili jsme e-mail s otázkami, na které se Dita stejně zeptá. Stačí doplnit odpovědi a odeslat.</p>
+            <ul class="checklist" style="margin-bottom:1.2rem">
+              <li><span>Kterou kočičku chcete a kde bydlíte</span></li>
+              <li><span>Kdo s vámi bydlí: děti (a jak staré), pes, další kočky</span></li>
+              <li><span>Jaké máte s kočkami zkušenosti a co od kočičky čekáte</span></li>
+            </ul>
+            <div class="btn-row">
+              <a class="btn" href="{adoption_mailto()}">{ICON["mail"]}Napsat e-mail</a>
+              <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
+            </div>
           </div>
         </div>
       </div>
@@ -478,27 +810,47 @@ ADOPCE = f"""
     <section class="section">
       <div class="wrap wrap--narrow">
         <div class="section-head">
-          <p class="eyebrow">Zamítnutá adopce</p>
-          <h2 class="reveal">Neúspěch? Nevěšte hlavu.</h2>
-          <p class="lead reveal">Může se stát, že vám kočičku nevydáme. Není to proto, že bychom byli zlí nebo si kočky tajně hromadili. Chceme jen, aby nový domov vydržel. Nejčastější důvody:</p>
+          <p class="eyebrow">Jak hledáme správný domov</p>
+          <h2 class="reveal">Hledáme pro kočku domov, kde vydrží napořád.</h2>
+          <p class="lead reveal">Někdy vám doporučíme jinou kočičku, než jakou jste si vybrali. Není to proto, že bychom vám nevěřili. Kočky z ulice mají své příběhy, zvyky a zdraví a chceme, aby nový domov vyšel kočce i vám. Nejčastěji jde o tyhle situace:</p>
         </div>
         <div class="faq reveal">
           <details>
-            <summary>Pes, který má rád kočky, a kočka, která nemá ráda psy</summary>
-            <div class="faq__body"><p>Máte zájem o dospělou kočku zvyklou žít venku a máte pro ni přístup dovnitř i ven, ale na zahradě máte psa. Starší kočky si na psy zvykají špatně a zahradě se pak vyhýbají. V lepším případě se nakonec ubytují u sousedů.</p></div>
+            <summary>Pes na zahradě a kočka zvyklá na venek</summary>
+            <div class="faq__body"><p>Starší kočky, které žily venku, si na psy zvykají špatně. I když si na nový domov zvyknou, zahradě se pak vyhýbají a v lepším případě se nakonec ubytují u sousedů. Rádi vám doporučíme kočku, která psy zná.</p></div>
           </details>
           <details>
             <summary>Malé děti</summary>
-            <div class="faq__body"><p>Chcete dětem pořídit mazlíčka a víte, že odpovědnost nesete vy? Výborně. Pokud jste vybrali kočičku, která se do rušnější domácnosti nehodí, rádi doporučíme jinou.</p><p>Opakovaně se nám ale stává, že malé děti neznají svou sílu a rodiče je neumí nebo nechtějí neustále korigovat. Pak je lepší počkat, až děti povyrostou a pochopí, že s živými tvory se zachází opatrně.</p></div>
+            <div class="faq__body"><p>Chcete dětem pořídit mazlíčka a víte, že odpovědnost nesete vy? Výborně. Pokud jste vybrali kočičku, která se do rušnější domácnosti nehodí, doporučíme jinou, které děti nevadí.</p><p>Malé děti často neznají svou sílu. Někdy je proto lepší počkat, až povyrostou a pochopí, že se zvířaty se zachází opatrně.</p></div>
           </details>
           <details>
-            <summary>Rušná silnice</summary>
-            <div class="faq__body"><p>Dospělou kočku zvyklou na ven nebo příliš důvěřivé kotě nevydáme k rušnější silnici. Někdy ani ke klidné cestě, pokud by ji kočka musela často přebíhat, třeba za myšmi na pole. Starší kočky si na nové hrozby zvykají těžko a bývá to pro ně osudné.</p><p>Občas se v depozitu objeví „vítací kotě“, které radostně běží ke všem lidem. Takové raději umístíme do bytu k rodině s dětmi.</p></div>
+            <summary>Bydlení u rušné silnice</summary>
+            <div class="faq__body"><p>Dospělou kočku zvyklou na ven nebo příliš důvěřivé kotě nedáváme k rušnější silnici. Někdy ani ke klidné cestě, pokud by ji kočka musela často přebíhat, třeba za myšmi na pole. Starší kočky si na nové hrozby zvykají těžko.</p><p>Občas se v depozitu objeví „vítací kotě“, které radostně běží ke všem lidem. Takové rádi dáme do bytu k rodině s dětmi.</p></div>
           </details>
           <details>
-            <summary>Další kočky v domácnosti a nemoci</summary>
-            <div class="faq__body"><p>Většina koček z depozita pochází z kočičích kolonií, takže bývají k ostatním kočkám nekonfliktní. Důvodem k zamítnutí ale může být zdravotní stav. Když jedna kočka z lokality měla rýmu, chřipku nebo plíseň, často se nemoc postupně projeví i u ostatních z téhož místa.</p><p>Proto kočku z promořené lokality nemůžeme doporučit do domácnosti s dalšími kočkami. Většina kočičích nemocí se přitom na lidi nepřenáší, s výjimkou některých plísní.</p></div>
+            <summary>Další kočky v domácnosti a zdraví</summary>
+            <div class="faq__body"><p>Většina koček z depozita pochází z kočičích kolonií, takže bývají k ostatním kočkám nekonfliktní. Když ale jedna kočka z lokality měla rýmu, chřipku nebo plíseň, často se nemoc postupně projeví i u ostatních z téhož místa. Kočku z takové lokality proto nedoporučíme do domácnosti s dalšími kočkami.</p><p>Většina kočičích nemocí se na lidi nepřenáší, s výjimkou některých plísní.</p></div>
           </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--sand section--tight" aria-labelledby="po-adopci">
+      <div class="wrap">
+        <div class="split split--top">
+          <div>
+            <p class="eyebrow">Po adopci nejste sami</p>
+            <h2 id="po-adopci" class="reveal">První dny doma</h2>
+            <p class="reveal">Kočka z depozita potřebuje čas. Některé se první dny schovávají, jiné se hned rozvalí na gauči. Obojí je normální.</p>
+            <p class="reveal">Když si nebudete vědět rady, třeba s čistotností nebo s tím, že se kočka nechce ukázat, <strong>zavolejte Ditě</strong>. Raději hned, než aby se problém zhoršil.</p>
+          </div>
+          <ul class="checklist reveal" style="--d:.08s">
+            <li><span>Připravte jednu klidnou místnost s miskami, záchůdkem a úkrytem.</span></li>
+            <li><span>Nechte kočku, ať si prostor prozkoumá sama. Nenuťte ji k mazlení.</span></li>
+            <li><span>První týdny ji nepouštějte ven, nejdřív si musí zvyknout na nový domov.</span></li>
+            <li><span>Zabezpečte okna a balkon sítí, i když jde o „bytovou“ kočku.</span></li>
+            <li><span>Pošlete nám fotku, až se zabydlí. Moc nás to potěší.</span></li>
+          </ul>
         </div>
       </div>
     </section>
@@ -518,14 +870,41 @@ NASLI = f"""
     <section class="page-hero">
       <div class="wrap">
         <p class="eyebrow reveal">Domov našli</p>
-        <h1 class="reveal" style="--d:.06s">Příběhy se <span class="accent-word">šťastným koncem</span>.</h1>
-        <p class="lead reveal" style="--d:.12s">Naši svěřenci, kteří už svůj domov našli. Všem novým páníčkům děkujeme a přejeme mnoho radostných chvil.</p>
+        <div class="big-number reveal" data-count="{ADOPTED}">{ADOPTED}</div>
+        <h1 class="reveal" style="--d:.06s;margin-top:.2em">koček už má <span class="accent-word">svého člověka</span>.</h1>
+        <p class="lead reveal" style="--d:.12s">Tolik našich svěřenců eviduje Pesweb.cz jako „našel domov“ ({STATS_DATE}). Všem novým páníčkům děkujeme a přejeme mnoho radostných chvil.</p>
       </div>
     </section>
 
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
-        {widget("pesweb-domov", {"shelter": "depozitum-chlup-nechlup", "statusRelease": ["nasel-domov"], "sort": "updatedAt:desc"})}
+        {gallery(GALLERY)}
+      </div>
+    </section>
+
+    <section class="section section--sand section--tight">
+      <div class="wrap">
+        <div class="split">
+          <div>
+            <p class="eyebrow">Adoptovali jste od nás?</p>
+            <h2 class="reveal">Pošlete nám fotku z nového domova.</h2>
+            <p class="reveal">Nic nás nepotěší víc. A fotky spokojených koček pomáhají dalším kočkám najít domov, protože lidé vidí, že to funguje.</p>
+          </div>
+          <div class="btn-row reveal">
+            <a class="btn" href="mailto:{EMAIL}?subject=Fotka%20z%20nov%C3%A9ho%20domova">{ICON["mail"]}Poslat fotku e-mailem</a>
+            <a class="btn btn--ghost" href="{FB}" target="_blank" rel="noopener">{ICON["fb"]}Napsat na Facebook</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Nejnovější šťastné konce</p>
+          <h2 class="reveal">Kdo odešel domů naposledy</h2>
+        </div>
+        {widget({"statusRelease": ["nasel-domov"], "sort": "updatedAt:desc"})}
       </div>
     </section>
 
@@ -544,8 +923,12 @@ DOCASKA = f"""
     <section class="page-hero">
       <div class="wrap">
         <p class="eyebrow reveal">Domácí depozita</p>
-        <h1 class="reveal" style="--d:.06s">Dočasná péče: domov <span class="accent-word">na přechodnou dobu</span>.</h1>
-        <p class="lead reveal" style="--d:.12s">Uvažujete o kočičce, ale nevíte, jestli zvládnete péči na dlouhé roky dopředu? Pak může být dočasná péče, tedy „dočaska“, to pravé pro vás.</p>
+        <h1 class="reveal" style="--d:.06s">Dočasná péče: kočka doma <span class="accent-word">bez závazku na celý život</span>.</h1>
+        <p class="lead reveal" style="--d:.12s">Každá dočaska znamená, že můžeme vzít z ulice další kočku. Vy dáte kočce domov na přechodnou dobu, my hradíme krmení, stelivo i veterinu.</p>
+        <div class="btn-row reveal" style="--d:.18s">
+          <a class="btn" href="{foster_mailto()}">{ICON["mail"]}Chci být dočaska</a>
+          <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
+        </div>
       </div>
     </section>
 
@@ -555,41 +938,82 @@ DOCASKA = f"""
           <div class="prose">
             <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" loading="lazy" width="960" height="720"><figcaption>Eliot a Emil v domácím depozitu</figcaption></figure>
 
-            <h2>Dočaska není půjčovna koček</h2>
-            <p>Depozitovatel se zavazuje starat se o kočičku, dokud nenajde nový domov, nebo alespoň do doby, než se uvolní místo v depozitu. Ve chvíli, kdy kočičku vydáme do dočasky, totiž bereme z ulice další kočky: nemocné, v akutním ohrožení života nebo takové, které už čekají u nálezců.</p>
-            <p>Proto není možné vrátit kočku z dočasné péče ze dne na den s tím, že jste si to rozmysleli. Její místo mezitím zabrala kočka z ulice v karanténě a jednotlivá místa jsou navíc rozdělena podle lokality nálezu, aby se při skrytých infekcích nenakazilo celé depozitum. Pro přesouvanou kočku je to obrovský stres.</p>
-
-            <h2>Do dočasek nedáváme nemocné kočky</h2>
-            <p>Zvlášť ne začínajícím zájemcům. Naopak potřebujeme dát pryč zdravé kočky, aby se nenakazily. Nemusíte se tedy bát, že budete mít ještě víc práce, starostí a běhání na veterinu.</p>
-            <p>Máme i ostřílené dočaskáře, kteří si vezmou těžší případy a v klidu je vypiplají. Patří jim za to naše velké díky.</p>
-
             <h2>Proč dočasky pomáhají</h2>
             <ul>
+              <li>Uvolníte místo v depozitu pro kočku, která zrovna čeká na ulici nebo u nálezce.</li>
               <li>Kočka má celého človíčka na hraní a drbání jen pro sebe, víc se mazlí a zvyká si na lidi.</li>
               <li>V domácím prostředí ji poznáte líp než my v depozitu s dvaceti kočkami. Můžeme tak doplnit její profil a najít jí ty nejlepší zájemce.</li>
-              <li>Doma uděláte víc a hezčích fotek, a ty prodávají.</li>
-              <li>Uvolníte místo v depozitu pro kočku, která zrovna čeká na ulici.</li>
+              <li>Doma uděláte víc a hezčích fotek. A kočky vyfocené doma lidé sdílejí mnohem víc.</li>
             </ul>
 
             <div class="callout">
-              <p><strong>Náklady hradí depozitum.</strong> Všechny materiální potřeby koček v dočasné péči platí Depozitum chlup-nechlup. K adopci přednostně nabízíme kočky z dočasek, aby si dočaskáři mohli odpočinout.</p>
+              <p><strong>Náklady hradí depozitum.</strong> Všechny materiální potřeby koček v dočasné péči platí Depozitum chlup-nechlup. Do dočasek navíc dáváme zdravé kočky, takže se nemusíte bát běhání po veterinách.</p>
             </div>
+
+            <h2>Dočaska není půjčovna koček</h2>
+            <p>Depozitovatel se zavazuje starat se o kočičku, dokud nenajde nový domov, nebo alespoň do doby, než se uvolní místo v depozitu. Ve chvíli, kdy kočičku vydáme do dočasky, totiž bereme z ulice další kočky: nemocné, v akutním ohrožení života nebo takové, které už čekají u nálezců.</p>
+            <p>Proto není možné vrátit kočku z dočasné péče ze dne na den. Její místo mezitím zabrala kočka z ulice v karanténě a jednotlivá místa jsou rozdělena podle lokality nálezu, aby se při skrytých infekcích nenakazilo celé depozitum. Pro přesouvanou kočku je to obrovský stres.</p>
+            <p>Máme i ostřílené dočaskáře, kteří si vezmou těžší případy a v klidu je vypiplají. Patří jim za to naše velké díky.</p>
           </div>
           <aside class="aside-card reveal">
             <h3>Chcete se stát dočaskou?</h3>
             <p>Ozvěte se Ditě. Domluvíte se, jaká kočička by se k vám hodila a co všechno budete potřebovat.</p>
             <div class="btn-row" style="flex-direction:column">
-              <a class="btn" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
-              <a class="btn btn--ghost" href="mailto:{EMAIL}?subject=Do%C4%8Dasn%C3%A1%20p%C3%A9%C4%8De">{ICON["mail"]}Napsat e-mail</a>
+              <a class="btn" href="{foster_mailto()}">{ICON["mail"]}Napsat e-mail</a>
+              <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
             </div>
           </aside>
         </div>
       </div>
     </section>
 
+    <section class="section section--sand">
+      <div class="wrap wrap--narrow">
+        <div class="section-head">
+          <p class="eyebrow">Na co se lidé ptají</p>
+          <h2 class="reveal">Obavy, které má skoro každý</h2>
+        </div>
+        <div class="faq reveal">
+          <details>
+            <summary>Co když se do kočky zamiluju?</summary>
+            <div class="faq__body"><p>To se stává a je to dobře. Znamená to, že se kočce u vás dařilo. Řekněte to Ditě: dočaskář kočku zná nejlíp, takže se o adopci můžete rovnou pobavit. A když si ji nenecháte, pomůžete nám najít jí domov, kde bude stejně šťastná.</p></div>
+          </details>
+          <details>
+            <summary>Kolik času mi to zabere?</summary>
+            <div class="faq__body"><p>Asi jako vlastní kočka: krmení, záchůdek a hlavně pozornost a mazlení. Nic navíc. Do dočasek dáváme zdravé kočky, takže léčení ani časté cesty k veterináři nečekejte.</p></div>
+          </details>
+          <details>
+            <summary>Na jak dlouho to je?</summary>
+            <div class="faq__body"><p>Dokud kočka nenajde nový domov, nebo dokud se neuvolní místo v depozitu. Kočky z dočasek nabízíme k adopci přednostně. Délku i to, co kdyby se něco změnilo, si s Ditou domluvíte předem.</p></div>
+          </details>
+          <details>
+            <summary>Už mám doma kočku nebo psa</summary>
+            <div class="faq__body"><p>Napište nám, jaká zvířata doma máte. Kočku k vám vybereme tak, aby to fungovalo, a poradíme, jak je spolu seznámit. Hodí se mít pro dočasku na začátek samostatnou místnost.</p></div>
+          </details>
+          <details>
+            <summary>Kdo mi poradí, když si nebudu vědět rady?</summary>
+            <div class="faq__body"><p>Dita. Je na telefonu <a href="tel:{PHONE_TEL}">{PHONE}</a> a s kočkami má víc než desetiletou zkušenost.</p></div>
+          </details>
+          <details>
+            <summary>Co když pojedu na dovolenou?</summary>
+            <div class="faq__body"><p>Řekněte nám to s předstihem a domluvíme se. Jen prosím ne ze dne na den, viz „Dočaska není půjčovna koček“ výše.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="wrap wrap--narrow center">
+        <p class="eyebrow" style="justify-content:center">Znáte někoho, kdo by mohl být dočaska?</p>
+        <h2 class="reveal">Nejvíc dočaskářů přivedou jejich známí.</h2>
+        <p class="lead reveal" style="margin-inline:auto;max-width:52ch">Pošlete tuhle stránku kamarádce, která miluje kočky, ale na celý život si ji vzít nemůže.</p>
+        <div class="reveal" style="display:flex;justify-content:center;margin-top:20px">{share("Dočasná péče o kočky z Depozita chlup-nechlup. Náklady hradí depozitum, ty dáš kočce domov na přechodnou dobu.")}</div>
+      </div>
+    </section>
+
     <section class="section section--tight">
       <div class="wrap">
-        {cta_band("Dočasku nezvládnete? I tak můžete pomoct.", "Finanční dar na transparentní účet pokryje kastrace, léky i krmení.", "podporte-nas.html", "Podpořte nás")}
+        {cta_band("Dočasku nezvládnete? I tak můžete pomoct.", "Pravidelný příspěvek na transparentní účet pokryje kastrace, léky i krmení.", "podporte-nas.html", "Podpořte nás")}
       </div>
     </section>
 """
@@ -598,25 +1022,98 @@ DOCASKA = f"""
 # Podpořte nás
 # ---------------------------------------------------------------------------
 
+wishlist_items = "\n".join(f"          <li class=\"reveal\"><strong>{a}</strong><span>{b}</span></li>" for a, b in WISHLIST)
+
 PODPORA = f"""
     <section class="page-hero">
       <div class="wrap">
         <p class="eyebrow reveal">Podpořte nás</p>
         <h1 class="reveal" style="--d:.06s">Bez vás by depozitum <span class="accent-word">nemohlo fungovat</span>.</h1>
-        <p class="lead reveal" style="--d:.12s">Nejsme zřizováni městem ani státem. Veškeré náklady na kastrace a ošetření hradíme z darů, případně z vlastní kapsy.</p>
+        <p class="lead reveal" style="--d:.12s">Provoz depozita stojí necelé 2 000 Kč denně. Město Strakonice nám od roku 2024 přispívá {fmt_kc(CITY_MONTHLY)} měsíčně, to pokryje zhruba třetinu. Zbytek, přes 450 000 Kč ročně, dáváte vy.</p>
       </div>
     </section>
 
-    <section class="section section--dark section--tight">
+    <section class="section section--dark section--tight" id="dar">
       <div class="wrap">
         <div class="donate">
           <div>
             <p class="eyebrow">Transparentní účet</p>
             <h2 class="reveal">Pošlete dar na kočičí účet</h2>
-            <p class="lead reveal">Majitelka účtu: Ing. Dita Uhriková · název účtu: Depozitum chlup-nechlup. Pohyby na účtu si můžete kdykoli prohlédnout na stránkách Fio banky.</p>
-            <p class="reveal" style="opacity:.8">Ne všechny nákupy pro kočičky jsou z výpisu snadno čitelné, a proto na Facebooku sdílíme i účtenky a faktury v albu <a href="https://www.facebook.com/media/set/?vanity=depozitumchlupnechlup&amp;set=a.3773941716006989" target="_blank" rel="noopener">Transparentní účet</a>.</p>
+            <p class="lead reveal">Majitel účtu: {ORG_NAME}, IČO {ORG_ICO}. Pohyby na účtu si můžete kdykoli prohlédnout na stránkách Fio banky.</p>
+            <p class="reveal" style="opacity:.8">Ne všechny nákupy pro kočičky jsou z výpisu snadno čitelné, a proto na Facebooku sdílíme i účtenky a faktury v albu <a href="{FB_RECEIPTS}" target="_blank" rel="noopener">Transparentní účet</a>.</p>
           </div>
           {account_card("reveal")}
+        </div>
+        {monthly_block()}
+      </div>
+    </section>
+
+    <section class="section" id="kam-jdou-penize" aria-labelledby="penize-nadpis">
+      <div class="wrap">
+        <div class="split split--top">
+          <div>
+            <p class="eyebrow">Kam jdou vaše peníze</p>
+            <h2 id="penize-nadpis" class="reveal">Víc než polovina na krmivo, čtvrtina na veterinu.</h2>
+            <p class="reveal">Z účtu neplatíme žádné mzdy. Všechno, co přijde, jde na kočky. Kontrolovat to můžete sami:</p>
+            <ul class="checklist reveal">
+              <li><span><a href="{FIO}" target="_blank" rel="noopener">Transparentní účet u Fio banky</a> se všemi platbami</span></li>
+              <li><span><a href="{FB_RECEIPTS}" target="_blank" rel="noopener">Účtenky a faktury</a> v albu na Facebooku</span></li>
+              <li><span><a href="{JUSTICE_DOCS}" target="_blank" rel="noopener">Účetní závěrky spolku</a> ve sbírce listin na justice.cz</span></li>
+            </ul>
+            {tax_box()}
+          </div>
+          {spending_chart()}
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--sand section--tight" aria-labelledby="dekujeme-nadpis">
+      <div class="wrap wrap--narrow center">
+        <p class="eyebrow" style="justify-content:center">Děkujeme</p>
+        <h2 id="dekujeme-nadpis" class="reveal">Pomáhají nám</h2>
+        <p class="lead reveal" style="margin-inline:auto;max-width:60ch"><strong>Město Strakonice</strong>, které s námi má od roku 2024 smlouvu o péči o toulavé a opuštěné kočky, spolek <a href="https://www.pomahejmezviratum.cz/" target="_blank" rel="noopener">Pomáhejme zvířatům</a>, který nám přispěl na krmivo a odchytové pasti, a hlavně stovky lidí, kteří posílají dary, krmení a sdílejí naše kočky.</p>
+      </div>
+    </section>
+
+    <section class="section" id="potreby" aria-labelledby="potreby-nadpis">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Věcné dary</p>
+          <h2 id="potreby-nadpis" class="reveal">Co se v depozitu vždy hodí</h2>
+          <p class="lead reveal">Než něco koupíte, napište nebo zavolejte Ditě. Řekne vám, co zrovna dochází, a domluvíte se na předání.</p>
+        </div>
+        <ul class="wishlist">
+{wishlist_items}
+        </ul>
+        <div class="btn-row">
+          <a class="btn" href="mailto:{EMAIL}?subject=V%C4%9Bcn%C3%BD%20dar">{ICON["mail"]}Domluvit věcný dar</a>
+          <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
+        </div>
+        <p class="note" style="margin-top:14px">Seznam aktualizován: {WISHLIST_DATE}.</p>
+      </div>
+    </section>
+
+    <section class="section section--sand" id="sdileni" aria-labelledby="sdileni-nadpis">
+      <div class="wrap">
+        <div class="split split--top">
+          <div>
+            <p class="eyebrow">Sdílení</p>
+            <h2 id="sdileni-nadpis" class="reveal">Nic nestojí a pomáhá nejvíc</h2>
+            <p class="reveal">Většina lidí se o útulcích dozví od známých nebo ze sociálních sítí. Kočky, které víc lidí uvidí, najdou domov rychleji.</p>
+            <ul class="checklist reveal">
+              <li><span>Sdílejte jednu kočičku týdně z <a href="{FB}" target="_blank" rel="noopener">Facebooku Depozita</a>.</span></li>
+              <li><span>Vytiskněte plakát a pověste ho u veterináře, v obchodě nebo na obecní nástěnce.</span></li>
+              <li><span>Máte web obce, ordinace nebo firmy? Kočky na něj můžete vložit přes Pesweb.cz. <a href="mailto:{EMAIL}?subject=Inzerce%20ko%C4%8Dek">Napište nám</a>.</span></li>
+            </ul>
+          </div>
+          <div class="quote-card reveal" style="--d:.08s">
+            <h3>Plakát „Hledáme domov“</h3>
+            <p style="color:var(--muted)">A4 s QR kódem, který vede přímo na naše kočky na Peswebu. Stačí vytisknout.</p>
+            <div class="btn-row" style="margin-bottom:24px">
+              <a class="btn" href="plakat.html">{ICON["print"]}Otevřít plakát</a>
+            </div>
+            {share("Depozitum chlup-nechlup ze Strakonic hledá domovy pro kočky z ulice. Podívej se, kdo čeká:", "index.html")}
+          </div>
         </div>
       </div>
     </section>
@@ -631,26 +1128,20 @@ PODPORA = f"""
           <a class="help-card reveal" href="kocky-k-adopci.html">
             <div class="help-card__icon">{ICON["home"]}</div>
             <h3>Adopce</h3>
-            <p>Nejlepší pomoc je stabilní a bezpečný domov.</p>
+            <p>Nejlepší pomoc je stabilní a bezpečný domov. Adopce je bez poplatku.</p>
             <span class="help-card__more">Kočky k adopci{ICON["arrow"]}</span>
           </a>
           <a class="help-card reveal" style="--d:.08s" href="docasna-pece.html">
             <div class="help-card__icon">{ICON["paw"]}</div>
             <h3>Dočasná péče</h3>
-            <p>Dejte zdravé kočce domov, než najde ten trvalý.</p>
+            <p>Dejte zdravé kočce domov, než najde ten trvalý. Náklady hradíme my.</p>
             <span class="help-card__more">Jak to funguje{ICON["arrow"]}</span>
           </a>
-          <a class="help-card reveal" style="--d:.16s" href="{FB}" target="_blank" rel="noopener">
-            <div class="help-card__icon">{ICON["share"]}</div>
-            <h3>Sdílení</h3>
-            <p>Sdílejte naše kočičky na Facebooku nebo na inzertních portálech jako Annonce a Bazoš.</p>
-            <span class="help-card__more">Facebook Depozita{ICON["arrow"]}</span>
-          </a>
-          <a class="help-card reveal" style="--d:.24s" href="mailto:{EMAIL}?subject=Inzerce%20ko%C4%8Dek">
+          <a class="help-card reveal" style="--d:.16s" href="nasli-jste-kocku.html">
             <div class="help-card__icon">{ICON["search"]}</div>
-            <h3>Inzerce</h3>
-            <p>Máte web obce, veterinární ordinace nebo firmy? Kočky k adopci na něj můžete vložit přes Pesweb.cz.</p>
-            <span class="help-card__more">Napište nám{ICON["arrow"]}</span>
+            <h3>Hlaste nálezy obci</h3>
+            <p>Každá nahlášená kočka tlačí obce k tomu, aby problém s kočkami začaly řešit.</p>
+            <span class="help-card__more">Jak postupovat{ICON["arrow"]}</span>
           </a>
         </div>
       </div>
@@ -673,6 +1164,10 @@ NALEZ = f"""
         <p class="eyebrow reveal">Našli jste kočku?</p>
         <h1 class="reveal" style="--d:.06s">Co dělat, když <span class="accent-word">najdete kočku</span></h1>
         <p class="lead reveal" style="--d:.12s">Obec má ze zákona povinnost postarat se o toulavé zvíře, o kočku stejně jako o psa. Tady je postup, který opravdu pomáhá. S laskavým svolením autorky Evy Hulcové.</p>
+        <div class="btn-row reveal" style="--d:.18s">
+          <a class="btn btn--ghost" href="#kotata">Našli jste koťata?</a>
+          <a class="btn btn--ghost" href="#ztracena">Ztratila se vám kočka?</a>
+        </div>
       </div>
     </section>
 
@@ -705,8 +1200,38 @@ NALEZ = f"""
               <p>Prosím nálezce, aby na nás brali ohled. Je nás málo a chodíme do vlastní práce. Postupujte prosím podle návodu a podle zákona právě proto, aby se podmínky pro toulavé kočky v naší zemi změnily. Moc děkuji. Sdílejte prosím.</p>
               <p style="margin:0"><strong>Eva Hulcová</strong></p>
             </blockquote>
+
+            <h2 id="kotata">Našli jste koťata?</h2>
+            <p>Malá koťata bez matky nemusí být opuštěná. Kočka je často jen na lovu a vrátí se.</p>
+            <ul>
+              <li><strong>Nejdřív pozorujte z dálky</strong>, klidně několik hodin. Pokud se matka vrací, nechte koťata u ní, je to pro ně nejlepší.</li>
+              <li>Pro maličká koťata je větší nebezpečí <strong>chlad než hlad</strong>. Pokud jsou mokrá, studená nebo v ohrožení, zahřejte je (láhev s teplou vodou zabalená v ručníku) a hned volejte.</li>
+              <li>Nekrmte je kravským mlékem. Koťatům škodí.</li>
+              <li>Postup s obcí platí i pro koťata. Matku je pak potřeba odchytit a vykastrovat, jinak bude za pár měsíců další vrh.</li>
+            </ul>
+
+            <h2 id="kastrace">Krmíte kočky na dvoře?</h2>
+            <p>Nejvíc pomůžete, když je necháte vykastrovat. Jedna nevykastrovaná kočka může mít dvakrát až třikrát do roka koťata.</p>
+            <ul>
+              <li>Spolek <a href="https://www.feliti.cz/kastrace/" target="_blank" rel="noopener">Feliti</a> proplácí kastrace toulavých koček i lidem, kteří je krmí.</li>
+              <li>Projekt <a href="https://www.obcekastruji.cz/" target="_blank" rel="noopener">Obce kastrují</a> pomáhá s kastracemi, na kterých se podílí obec, a radí, jak obec oslovit.</li>
+              <li>S odchytem rádi poradíme, ozvěte se.</li>
+            </ul>
+
             <div class="callout">
-              <p><strong>Ztratil se vám mazlíček?</strong> Zkuste službu <a href="https://najdimazlicka.cz/" target="_blank" rel="noopener">Najdi mazlíčka</a>, která hledá ztracená zvířata po celé republice pomocí kampaní na sociálních sítích.</p>
+              <p><strong>Nalezené kočky ze Strakonic</strong> zveřejňuje město na své <a href="{CITY_CATS}" target="_blank" rel="noopener">stránce Nalezené kočky</a>. Hledáte-li ztracenou kočku, podívejte se i tam.</p>
+            </div>
+
+            <h2 id="ztracena">Ztratila se vám kočka?</h2>
+            <p>Většina ztracených koček je blíž, než si myslíte. Podle studie z Austrálie se tři čtvrtiny nalezených koček našly do 500 metrů od místa, kde utekly.</p>
+            <ul>
+              <li><strong>Hledejte hned a pěšky</strong>, hlavně za soumraku a v noci, kdy je klid. Volejte ji tichým hlasem a zachrastěte granulemi.</li>
+              <li>Poproste sousedy, ať se podívají do kůlen, garáží, sklepů a altánů. Vyděšená kočka se schová a nemňouká.</li>
+              <li>Nahlaste ztrátu obci a městské policii, vyvěste letáky s fotkou a zveřejněte ji na Pesweb.cz v sekci <a href="https://www.pesweb.cz/ztracene-zvire" target="_blank" rel="noopener">Ztracená zvířata</a>. Ve Strakonicích sledujte i <a href="{CITY_CATS}" target="_blank" rel="noopener">nalezené kočky na webu města</a>.</li>
+              <li>Pokud je kočka čipovaná, ověřte, že je čip zaregistrovaný na vaše aktuální údaje.</li>
+            </ul>
+            <div class="callout">
+              <p><strong>Tip:</strong> Zkuste také službu <a href="https://najdimazlicka.cz/" target="_blank" rel="noopener">Najdi mazlíčka</a>, která hledá ztracená zvířata po celé republice pomocí kampaní na sociálních sítích.</p>
             </div>
           </div>
           <aside class="aside-card reveal">
@@ -731,7 +1256,7 @@ ONAS = f"""
       <div class="wrap">
         <p class="eyebrow reveal">O nás</p>
         <h1 class="reveal" style="--d:.06s">Malé depozitum s <span class="accent-word">velkým srdcem</span>.</h1>
-        <p class="lead reveal" style="--d:.12s">Depozitum chlup-nechlup je domácí soukromé zařízení na odchyt a léčbu koček ze Strakonic a okolí.</p>
+        <p class="lead reveal" style="--d:.12s">Depozitum chlup-nechlup je domácí zařízení na odchyt a léčbu koček ze Strakonic a okolí. Od roku 2023 funguje jako spolek, {ORG_NAME}.</p>
       </div>
     </section>
 
@@ -743,7 +1268,7 @@ ONAS = f"""
             <h2 class="mt-0">Jak to celé začalo</h2>
             <p>Depozitum vzniklo před více než deseti lety jako malé rodinné zázemí pro nalezené kočičky z okolí. Postupně se rozrostlo do dnešní velikosti.</p>
             <p>Kapacita depozita je <strong>20 míst</strong>. Kvůli karanténám, stálým a starším kočičkám, které je těžké umístit, a hlavně kvůli nemocem musíme kočky z různých lokalit ubytovávat odděleně a důsledně dodržovat hygienická opatření.</p>
-            <p>Za rok se v depozitu vystřídá zhruba <strong>100 až 120 koček</strong>. To je kapacita kočičího útulku v Českých Budějovicích, kde se přitom odchytem zvířat zabývá hned několik organizací.</p>
+            <p>Za rok se v depozitu vystřídá zhruba <strong>100 až 120 koček</strong>. To je kapacita kočičího útulku v Českých Budějovicích, kde se přitom odchytem zvířat zabývá hned několik organizací. Přes Pesweb.cz už u nás domov našlo <strong>{ADOPTED} koček</strong>.</p>
           </div>
         </div>
       </div>
@@ -760,16 +1285,20 @@ ONAS = f"""
         <div class="layout-aside">
           <div class="prose">
             <h2 class="mt-0">Dita Uhriková</h2>
-            <p>Zakladatelkou, organizátorkou, páteří, ale především srdcem celého depozita je Dita Uhriková. Patří jí nesmírný dík a obdiv za vytrvalý boj s kočičími nemocemi a zraněními. Ani po letech vyčerpávajícího úsilí stále není hotovo: na ulicích se pořád objevují nové kočičky i s koťaty.</p>
+            <p>Zakladatelkou, předsedkyní spolku, organizátorkou, páteří, ale především srdcem celého depozita je Dita Uhriková. Patří jí nesmírný dík a obdiv za vytrvalý boj s kočičími nemocemi a zraněními. Ani po letech vyčerpávajícího úsilí stále není hotovo: na ulicích se pořád objevují nové kočičky i s koťaty.</p>
             <p>Rozhovor s Ditou si můžete přečíst na portálu <a href="https://www.jcted.cz/dita-uhrikova-bojuje-za-kocici-utulek-za-obce-hasime-problemy-z-urazek-na-internetu-si-nic-nedelam-rika/" target="_blank" rel="noopener">Jižní Čechy Teď</a>.</p>
 
-            <h2>Strakonice stále nemají kočičí útulek</h2>
+            <h2>Strakonice nemají vlastní kočičí útulek</h2>
+            <p>Dlouhá léta jsme všechno platili jen z darů. Od roku 2024 má s námi Město Strakonice smlouvu o péči o toulavé a opuštěné kočky a přispívá {fmt_kc(CITY_MONTHLY)} měsíčně. Nalezené kočky ze Strakonic proto najdete i na <a href="{CITY_CATS}" target="_blank" rel="noopener">stránce města</a>. Příspěvek pokryje zhruba třetinu nákladů, zbytek dávají dárci.</p>
             <p>Zvlášť v době jarních koťat se snažíme depozitum „nafouknout“ a obsadit každou dočasnou péči, která je jen trochu možná. Kapacitou ale nemůžeme pokrýt péči o všechny nechtěné a toulavé kočky ze Strakonic a přilehlých obcí.</p>
-            <p>Město Strakonice přesto i nadále odmítá zřídit útulek pro kočky. Povinnosti, které obci ukládá zákon, přitom není možné přenášet na její občany.</p>
 
             <h2>Kdo nám pomáhá</h2>
-            <p>Velkou pomocí jsou organizace jako <a href="https://www.feliti.cz/" target="_blank" rel="noopener">Feliti</a>, které proplácejí kastrace koček i „běžným smrtelníkům“. Podporujeme také spolek Obce kastrují, který šíří osvětu o nutnosti kastrace koček.</p>
+            <p>Velkou pomocí jsou organizace jako <a href="https://www.feliti.cz/" target="_blank" rel="noopener">Feliti</a>, které proplácejí kastrace koček i „běžným smrtelníkům“, nebo spolek <a href="https://www.pomahejmezviratum.cz/" target="_blank" rel="noopener">Pomáhejme zvířatům</a>. Podporujeme také projekt <a href="https://www.obcekastruji.cz/" target="_blank" rel="noopener">Obce kastrují</a>, který šíří osvětu o nutnosti kastrace koček.</p>
             <div class="callout"><p><strong>Kastrovat, kastrovat, kastrovat.</strong> Místo toho, aby koček za léta našeho působení ubývalo, zdá se, že je to naopak. Jediná cesta ven je důsledná kastrace, i u koček „na dvoře“.</p></div>
+
+            <h2>Údaje o spolku</h2>
+            <p><strong>{ORG_NAME}</strong><br>IČO {ORG_ICO}<br>Sídlo: {ORG_SEAT} (návštěvy jen po domluvě)<br>{ORG_REG[0].upper() + ORG_REG[1:]}<br>Předsedkyně spolku: Dita Uhriková<br>Transparentní účet: {ACCOUNT} (Fio banka)</p>
+            <p><a href="{JUSTICE_DOCS}" target="_blank" rel="noopener">Účetní závěrky a stanovy</a> najdete ve sbírce listin na justice.cz.</p>
           </div>
           <aside class="aside-card reveal">
             <h3>Sledujte nás</h3>
@@ -791,14 +1320,112 @@ ONAS = f"""
     </section>
 """
 
-FAVICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#d4612a"/><g fill="#fffaf2" transform="translate(6 6) scale(.75)">' + ICON["paw"][ICON["paw"].index(">") + 1:-6] + "</g></svg>"
+# ---------------------------------------------------------------------------
+# Plakát k vytištění
+# ---------------------------------------------------------------------------
+
+PLAKAT = f"""
+    <section class="page-hero no-print">
+      <div class="wrap">
+        <p class="eyebrow">Plakát k vytištění</p>
+        <h1>Pověste kočky tam, kde je lidé uvidí.</h1>
+        <p class="lead">U veterináře, v obchodě, na obecní nástěnce nebo v práci. QR kód vede přímo na naše kočky k adopci.</p>
+        <div class="btn-row"><button class="btn" type="button" onclick="window.print()">{ICON["print"]}Vytisknout plakát</button></div>
+      </div>
+    </section>
+
+    <section class="section section--tight poster-wrap" style="padding-top:0">
+      <div class="wrap">
+        <article class="poster">
+          <div class="poster__photos">
+            <img src="assets/img/domov/ludvik-lucian.jpg" alt="">
+            <img src="assets/img/kocka-tuxedo.jpg" alt="">
+            <img src="assets/img/domov/xia.jpg" alt="">
+          </div>
+          <p class="poster__eyebrow">Depozitum chlup-nechlup · Strakonice</p>
+          <h2 class="poster__title">Hledáme domov<br>pro kočky z ulice</h2>
+          <p class="poster__lead">Desítky koček a koťat z okolí Strakonic čekají na svého člověka. Jsou ošetřené, dospělé kočky kastrované. <strong>Adopce je bez poplatku.</strong></p>
+          <div class="poster__bottom">
+            <div class="poster__qr"><img src="assets/img/qr-pesweb.svg" alt="QR kód na kočky k adopci na Pesweb.cz"></div>
+            <div>
+              <p class="poster__big">Naskenujte a vyberte si</p>
+              <p>{PESWEB.replace("https://", "")}</p>
+              <p class="poster__phone">{ICON["phone"]}{PHONE}</p>
+              <p>Hledáme i dočasné péče a dárce. Transparentní účet {ACCOUNT}</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+"""
+
+SOUKROMI = f"""
+    <section class="page-hero">
+      <div class="wrap">
+        <p class="eyebrow reveal">Soukromí a cookies</p>
+        <h1 class="reveal" style="--d:.06s">Jak web zachází s vašimi údaji</h1>
+      </div>
+    </section>
+
+    <section class="section section--tight" style="padding-top:0">
+      <div class="wrap">
+        <div class="prose">
+          <h2 class="mt-0">Kdo web provozuje</h2>
+          <p>{ORG_NAME}, IČO {ORG_ICO}, sídlo {ORG_SEAT}. Kontakt: <a href="mailto:{EMAIL}">{EMAIL}</a>, {PHONE}.</p>
+
+          <h2>Cookies</h2>
+          <p>Tento web sám žádné cookies neukládá a nepoužívá žádnou analytiku ani reklamní nástroje. Písma jsou uložená přímo na webu, takže se nenačítají od Googlu.</p>
+          <p>Seznam koček k adopci zobrazujeme pomocí widgetu portálu <a href="https://www.pesweb.cz/" target="_blank" rel="noopener">Pesweb.cz</a>. Widget se načítá z jeho serverů a Pesweb (a jeho ochrana Cloudflare) může ukládat technické cookies nutné pro provoz. Odkazy na Facebook, Instagram a WhatsApp jsou obyčejné odkazy; data se těmto službám předají, až když na odkaz kliknete.</p>
+
+          <h2>Osobní údaje</h2>
+          <p>Web neobsahuje formuláře. Když nám napíšete e-mail nebo zavoláte kvůli adopci, dočasné péči, nálezu kočky nebo potvrzení o daru, použijeme vaše údaje jen k vyřízení vaší žádosti, k uzavření adopční smlouvy a k vystavení potvrzení o daru, a uchováme je jen po dobu nutnou podle zákona.</p>
+          <p>Fotky koček od adoptujících zveřejníme jen s jejich souhlasem. Máte právo na přístup ke svým údajům, jejich opravu a výmaz; stačí napsat na <a href="mailto:{EMAIL}">{EMAIL}</a>. Stížnost můžete podat u Úřadu pro ochranu osobních údajů.</p>
+        </div>
+      </div>
+    </section>
+"""
+
+POSTER_CSS = """
+  <style>
+    .poster { max-width: 794px; margin: 0 auto; aspect-ratio: 210 / 297; background: #fffaf2; color: #2b211b; border-radius: 24px; box-shadow: var(--shadow); padding: 48px; display: flex; flex-direction: column; overflow: hidden; }
+    .poster__photos { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 10px; height: 34%; margin-bottom: 28px; }
+    .poster__photos img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
+    .poster__eyebrow { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: .8rem; color: #a8441a; margin: 0 0 10px; }
+    .poster__title { font-size: clamp(2rem, 6vw, 3.6rem); margin: 0 0 16px; color: #2b211b; }
+    .poster__lead { font-size: 1.15rem; margin: 0 0 auto; color: #5d4f45; }
+    .poster__bottom { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: center; border-top: 2px dashed rgba(43,33,27,.2); padding-top: 24px; margin-top: 24px; }
+    .poster__qr { background: #fff; padding: 8px; border-radius: 12px; }
+    .poster__qr img { width: 100%; height: auto; }
+    .poster__big { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; margin: 0 0 4px; }
+    .poster__bottom p { margin: 0 0 6px; }
+    .poster__phone { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: #a8441a; }
+    .poster__phone svg { width: 26px; height: 26px; }
+    @media (max-width: 600px) { .poster { padding: 22px; aspect-ratio: auto; } .poster__bottom { grid-template-columns: 110px 1fr; } .poster__phone { font-size: 1.25rem; } }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { background: #fff; }
+      .site-header, .site-footer, .progress, .skip-link, .no-print { display: none !important; }
+      .poster-wrap { padding: 0 !important; }
+      .poster-wrap .wrap { padding: 0; max-width: none; }
+      .poster { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; max-width: none; aspect-ratio: auto; padding: 16mm; }
+      .poster__phone { font-size: 2.2rem; }
+      .poster__title { font-size: 3.6rem; }
+      .poster__lead { font-size: 1.4rem; }
+    }
+  </style>"""
+
+FAVICON = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#d4612a"/><g fill="#fffaf2" transform="translate(6 6) scale(.75)">{PAW_PATHS}</g></svg>'
 
 if __name__ == "__main__":
     (OUT / "assets/img/favicon.svg").write_text(FAVICON, encoding="utf-8")
-    page("index.html", "Depozitum chlup-nechlup · Kočky z ulice hledají domov", "Domácí depozitum pro odchyt, léčbu a kastraci koček ze Strakonic a okolí. Kočky k adopci, dočasná péče a transparentní účet.", INDEX)
-    page("kocky-k-adopci.html", "Kočky k adopci", "Kočky z Depozita chlup-nechlup, které hledají stabilní a bezpečný domov. Podmínky adopce a nejčastější dotazy.", ADOPCE)
-    page("nasli-domov.html", "Domov našli", "Kočky z Depozita chlup-nechlup, které už našly nový domov.", NASLI)
-    page("docasna-pece.html", "Dočasná péče", "Jak funguje domácí depozitum neboli dočasná péče o kočky z Depozita chlup-nechlup.", DOCASKA)
-    page("podporte-nas.html", "Podpořte nás", "Transparentní účet 6077760777/2010 a další způsoby, jak podpořit Depozitum chlup-nechlup.", PODPORA)
-    page("nasli-jste-kocku.html", "Našli jste kočku?", "Co dělat, když najdete toulavou kočku: komu volat a jak postupovat podle zákona.", NALEZ)
+    make_qr()
+    page("index.html", "Depozitum chlup-nechlup · Kočky k adopci Strakonice", "Domácí depozitum pro odchyt, léčbu a kastraci koček ze Strakonic a okolí. Kočky k adopci bez poplatku, dočasná péče a transparentní účet.", INDEX,
+         f'\n  <script type="application/ld+json">{JSONLD}</script>')
+    page("kocky-k-adopci.html", "Kočky k adopci", "Kočky ze Strakonic a okolí, které hledají stabilní a bezpečný domov. Adopce bez poplatku, jak probíhá a na co se připravit.", ADOPCE)
+    page("nasli-domov.html", "Domov našli", f"Už {ADOPTED} koček z Depozita chlup-nechlup našlo nový domov.", NASLI)
+    page("docasna-pece.html", "Dočasná péče", "Dočasná péče o kočky ze Strakonic: náklady hradí depozitum, vy dáte kočce domov na přechodnou dobu.", DOCASKA)
+    page("podporte-nas.html", "Podpořte nás", "Transparentní účet 6077760777/2010, QR platba, trvalý příkaz, věcné dary a sdílení. Jak podpořit Depozitum chlup-nechlup.", PODPORA)
+    page("nasli-jste-kocku.html", "Našli jste kočku?", "Co dělat, když najdete toulavou kočku nebo koťata, a jak hledat ztracenou kočku.", NALEZ)
     page("o-nas.html", "O nás", "Příběh Depozita chlup-nechlup a jeho zakladatelky Dity Uhrikové.", ONAS)
+    page("plakat.html", "Plakát k vytištění", "Plakát A4 s QR kódem na kočky k adopci z Depozita chlup-nechlup.", PLAKAT, POSTER_CSS)
+    page("soukromi.html", "Soukromí a cookies", "Jak web Depozita chlup-nechlup zachází s osobními údaji a cookies.", SOUKROMI)
