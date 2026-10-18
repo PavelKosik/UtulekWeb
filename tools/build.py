@@ -171,8 +171,11 @@ FONT_FACES = re.sub(r"url\(([^)]+\.woff2)\)", rf"url(assets/fonts/\1?v={FONT_V})
 FONT_FACES = re.sub(r"/\*.*?\*/\s*", "", FONT_FACES, flags=re.S)
 FONT_FACES = re.sub(r"\s*\n\s*", "", FONT_FACES)
 FONTS = (
+    # latin-ext obsahuje č, ř, ě, ů…, takže ho potřebuje každá česká stránka; bez preloadu se stahuje až druhý
     f'<link rel="preload" href="assets/fonts/fraunces-normal-latin.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
+    f'  <link rel="preload" href="assets/fonts/fraunces-normal-latin-ext.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
     f'  <link rel="preload" href="assets/fonts/figtree-normal-latin.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
+    f'  <link rel="preload" href="assets/fonts/figtree-normal-latin-ext.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
     f'  <style>{FONT_FACES}</style>'
 )
 
@@ -514,9 +517,10 @@ def gallery_alt(name):
 
 
 def gallery(items, cls="", eager=0):
-    """Galerie koček, které našly domov. Prvních `eager` fotek je na první obrazovce: načtou se hned a přednostně."""
+    """Galerie koček, které našly domov. Prvních `eager` fotek je na první obrazovce: načtou se hned
+    a přednostně a nečekají na animaci odkrytí (ta by je ukázala až po spuštění skriptu)."""
     figs = "\n".join(
-        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{gallery_alt(name)}" width="{w}" height="{h}"{' fetchpriority="high"' if i < eager else ' loading="lazy"'} sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
+        f'          <figure{"" if i < eager else ' class="reveal"'} style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{gallery_alt(name)}" width="{w}" height="{h}"{' fetchpriority="high"' if i < eager else ' loading="lazy"'} sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
         for i, (slug, name, w, h) in enumerate(items)
     )
     return f'<div class="gallery {cls}">\n{figs}\n        </div>'
@@ -1175,7 +1179,7 @@ DOCASKA = f"""
       <div class="wrap">
         <div class="layout-aside">
           <div class="prose">
-            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" fetchpriority="high" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil už mají domov</figcaption></figure>
+            <figure><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" fetchpriority="high" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil už mají domov</figcaption></figure>
 
             <h2>Proč dočasná péče pomáhá</h2>
             <ul>
@@ -1586,7 +1590,7 @@ ONAS = f"""
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
         <div class="split">
-          <div class="split__media reveal" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" fetchpriority="high"></div>
+          <div class="split__media" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" fetchpriority="high"></div>
           <div class="prose">
             <h2 class="mt-0">Jak to celé začalo</h2>
             <p>Depozitum vzniklo zhruba před patnácti lety jako malé rodinné zázemí pro nalezené kočičky z okolí. Postupně se rozrostlo do dnešní velikosti.</p>
