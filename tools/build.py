@@ -511,9 +511,10 @@ def gallery_alt(name):
     return f"{name}, {'kočky, které už našly' if group else 'kočka, která už našla'} domov"
 
 
-def gallery(items, cls=""):
+def gallery(items, cls="", eager=0):
+    """Galerie koček, které našly domov. Prvních `eager` fotek je na první obrazovce, ty se nenačítají líně."""
     figs = "\n".join(
-        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{gallery_alt(name)}" width="{w}" height="{h}" loading="lazy" sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
+        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{gallery_alt(name)}" width="{w}" height="{h}"{"" if i < eager else ' loading="lazy"'} sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
         for i, (slug, name, w, h) in enumerate(items)
     )
     return f'<div class="gallery {cls}">\n{figs}\n        </div>'
@@ -1114,7 +1115,7 @@ NASLI = f"""
 
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
-        {gallery(GALLERY)}
+        {gallery(GALLERY, eager=4)}
       </div>
     </section>
 
@@ -1172,7 +1173,7 @@ DOCASKA = f"""
       <div class="wrap">
         <div class="layout-aside">
           <div class="prose">
-            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" loading="lazy" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil už mají domov</figcaption></figure>
+            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" fetchpriority="high" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil už mají domov</figcaption></figure>
 
             <h2>Proč dočasná péče pomáhá</h2>
             <ul>
@@ -1583,7 +1584,7 @@ ONAS = f"""
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
         <div class="split">
-          <div class="split__media reveal" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" loading="lazy"></div>
+          <div class="split__media reveal" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" fetchpriority="high"></div>
           <div class="prose">
             <h2 class="mt-0">Jak to celé začalo</h2>
             <p>Depozitum vzniklo zhruba před patnácti lety jako malé rodinné zázemí pro nalezené kočičky z okolí. Postupně se rozrostlo do dnešní velikosti.</p>
