@@ -484,7 +484,7 @@ def appeal_block():
           <div class="appeal__actions">
             <a class="btn" href="{PESWEB_CAT}{a["slug"]}" target="_blank" rel="noopener">Profil: {a["name"]}{ICON["external"]}</a>
             <a class="btn btn--ghost" href="kocky-k-adopci.html?kocka={quote(a["name"])}#dotaznik">{ICON["heart"]}Mám zájem</a>
-            <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}Zavolat Ditě</a>
+            <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}Zavolat Ditě</a>
             <a class="btn btn--ghost" href="https://www.facebook.com/sharer/sharer.php?u={quote(PESWEB_CAT + a["slug"], safe="")}" target="_blank" rel="noopener">{ICON["share"]}Sdílet na Facebooku</a>
           </div>
         </div>
@@ -506,14 +506,14 @@ def qform_actions(kind):
               <pre data-qform-preview></pre>
             </div>
             <div class="btn-row">
-              <button class="btn" type="button" data-qform-mail data-subject="{subject}">{ICON["mail"]}<span>Odeslat e-mailem</span></button>
+              <button class="btn" type="submit" data-qform-mail data-subject="{subject}">{ICON["mail"]}<span>Odeslat e-mailem</span></button>
               <button class="btn btn--ghost qform__sms" type="button" data-qform-sms>{ICON["phone"]}<span>Poslat SMS</span></button>
               <button class="btn btn--ghost" type="button" data-qform-copy>{ICON["copy"]}<span>Zkopírovat zprávu</span></button>
             </div>
             <p class="note">Formulář nic neukládá ani neodesílá. Jen z odpovědí připraví zprávu, kterou sami pošlete e-mailem nebo SMS, případně ji vložíte do zprávy na <a href="{FB}" target="_blank" rel="noopener">Facebooku Depozita</a>. Raději voláte? <a href="tel:{PHONE_TEL}">{PHONE}</a></p>"""
 
 
-ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce" data-to="{EMAIL}" data-sms="{PHONE_TEL}" novalidate>
+ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce" data-to="{EMAIL}" data-sms="{PHONE_TEL}" action="mailto:{EMAIL}?subject=Z%C3%A1jem%20o%20adopci" method="post" enctype="text/plain" novalidate>
             <h3>Dotazník pro zájemce</h3>
             <p class="qform__lead">Pár kliknutí místo dlouhého psaní. Na tyhle otázky se Dita stejně zeptá a díky nim vám doporučí kočku, která k vám opravdu sedne.</p>
             <label class="qf qf--text">O kterou kočičku máte zájem?<input type="text" name="kocka" placeholder="např. Zina, nebo nechám si poradit" autocomplete="off"></label>
@@ -535,7 +535,7 @@ ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce"
             {qform_actions("adopce")}
           </form>"""
 
-FOSTER_FORM = f"""<form class="qform reveal" id="prihlaska" data-qform="docaska" data-to="{EMAIL}" data-sms="{PHONE_TEL}" novalidate>
+FOSTER_FORM = f"""<form class="qform reveal" id="prihlaska" data-qform="docaska" data-to="{EMAIL}" data-sms="{PHONE_TEL}" action="mailto:{EMAIL}?subject=Do%C4%8Dasn%C3%A1%20p%C3%A9%C4%8De" method="post" enctype="text/plain" novalidate>
             <h3>Přihláška do dočasné péče</h3>
             <p class="qform__lead">Nezávazně. Dita se vám ozve a domluvíte se, jaká kočička by se k vám hodila.</p>
             {chips("bydleni", "Bydlíte", [("v bytě", "V bytě"), ("v domě bez zahrady", "V domě"), ("v domě se zahradou", "V domě se zahradou")])}
@@ -921,7 +921,7 @@ ADOPCE = f"""
 
     <section class="section section--tight" style="padding-top:0" aria-label="Kočky k adopci">
       <div class="wrap">
-        <form class="cat-filters" data-cat-filters aria-label="Výběr koček" onsubmit="return false">
+        <div class="cat-filters" data-cat-filters role="group" aria-label="Výběr koček">
           <fieldset class="chips">
             <legend>Věk</legend>
             <label><input type="radio" name="vek" value="" checked><span>Všechny</span></label>
@@ -940,9 +940,9 @@ ADOPCE = f"""
             <label><input type="radio" name="razeni" value="" data-api="createdAt:desc" checked><span>Nejnovější</span></label>
             <label><input type="radio" name="razeni" value="nejdele" data-api="foundDate:asc"><span>Čekají nejdéle</span></label>
           </fieldset>
-        </form>
+        </div>
         <p class="tab-intro" data-filter-note hidden>Starší a dospělé kočky čekají nejdéle. Přitom bývají klidnější a víte přesně, jakou povahu si domů berete.</p>
-        <p class="filter-empty" data-filter-empty hidden role="status">Tomuhle výběru teď žádná kočka neodpovídá. Zkuste jiný filtr, nebo <a href="tel:{PHONE_TEL}">zavolejte Ditě</a>, ráda poradí, která by se k vám hodila.</p>
+        <p class="filter-empty" data-filter-empty hidden role="status">Tomuhle výběru teď žádná kočka neodpovídá. Zkuste jiný filtr, nebo <a href="tel:{PHONE_TEL}">zavolejte Ditě</a>, ráda poradí, která by se k vám hodila.</p>
         {widget({"sort": "createdAt:desc"}, reveal=False)}
       </div>
     </section>

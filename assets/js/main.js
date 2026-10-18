@@ -468,8 +468,10 @@
       return false;
     };
 
+    // Odeslání (tlačítko i Enter): e-mail připravený z odpovědí. Bez JavaScriptu formulář použije action="mailto:".
     var mailBtn = form.querySelector("[data-qform-mail]");
-    if (mailBtn) mailBtn.addEventListener("click", function () {
+    if (mailBtn) form.addEventListener("submit", function (e) {
+      e.preventDefault();
       if (!validate()) return;
       var subject = mailBtn.getAttribute("data-subject") + (val("kocka") ? " – " + val("kocka") : "");
       location.href = "mailto:" + form.getAttribute("data-to") + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(compose().replace(/\n/g, "\r\n"));
