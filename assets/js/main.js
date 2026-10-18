@@ -164,8 +164,8 @@
 
     statements.forEach(function (el, i) {
       var r = stmt[i];
-      // osvětlení začne, když je text v 85 % výšky okna, a skončí ve 35 %
-      var lit = Math.round(clamp((vh * 0.85 - r.top) / (vh * 0.5 + r.height * 0.6)) * el._words.length);
+      // rozsvěcování začne, když je text v 90 % výšky okna; celý svítí, když jeho střed dojede doprostřed
+      var lit = Math.round(clamp((vh * 0.9 - r.top) / (vh * 0.4 + r.height * 0.5)) * el._words.length);
       if (lit === el._lit) return;
       el._lit = lit;
       el._words.forEach(function (w, j) { w.classList.toggle("is-lit", j < lit); });

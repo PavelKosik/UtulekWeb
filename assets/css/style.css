@@ -309,7 +309,7 @@ p { margin: 0 0 1em; text-wrap: pretty; }
   line-height: 1.2; letter-spacing: -0.015em; font-weight: 500;
   margin: 0; max-width: 24ch;
 }
-.statement .w { opacity: 0.16; transition: opacity 0.2s linear; }
+.statement .w { opacity: 0.24; transition: opacity 0.2s linear; }
 .statement .w.is-lit { opacity: 1; }
 .statement em { color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
 
