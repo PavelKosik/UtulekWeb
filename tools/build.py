@@ -171,11 +171,9 @@ FONT_FACES = re.sub(r"url\(([^)]+\.woff2)\)", rf"url(assets/fonts/\1?v={FONT_V})
 FONT_FACES = re.sub(r"/\*.*?\*/\s*", "", FONT_FACES, flags=re.S)
 FONT_FACES = re.sub(r"\s*\n\s*", "", FONT_FACES)
 FONTS = (
-    # latin-ext obsahuje č, ř, ě, ů…, takže ho potřebuje každá česká stránka; bez preloadu se stahuje až druhý
+    # Jen latin: preload i latin-ext (č, ř, ě…) na pomalém připojení zdržel styly a hlavní fotku (Lighthouse).
     f'<link rel="preload" href="assets/fonts/fraunces-normal-latin.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
-    f'  <link rel="preload" href="assets/fonts/fraunces-normal-latin-ext.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
     f'  <link rel="preload" href="assets/fonts/figtree-normal-latin.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
-    f'  <link rel="preload" href="assets/fonts/figtree-normal-latin-ext.woff2?v={FONT_V}" as="font" type="font/woff2" crossorigin>\n'
     f'  <style>{FONT_FACES}</style>'
 )
 
