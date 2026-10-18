@@ -259,14 +259,19 @@ def header(current):
       <nav class="nav" id="hlavni-menu" aria-label="Hlavní menu">
 {links}
         <a class="btn" href="podporte-nas.html"{cur if current == "podporte-nas.html" else ""}>{ICON["heart"]}Podpořit</a>
+        <a class="nav-phone" href="tel:{PHONE_TEL}">{ICON["phone"]}Dita: {PHONE}</a>
       </nav>
     </div>
   </header>"""
 
 
 def footer(current=""):
+    cta_second = f'<a class="btn" href="podporte-nas.html#dar">{ICON["heart"]}Podpořit</a>'
     if current == "kocky-k-adopci.html":
         cta_first = f'<a class="btn btn--ghost" href="#dotaznik">{ICON["mail"]}Dotazník</a>'
+    elif current == "nasli-jste-kocku.html":  # nálezce potřebuje telefon, ne dar
+        cta_first = f'<a class="btn btn--ghost" href="tel:156">{ICON["phone"]}Volat 156</a>'
+        cta_second = '<a class="btn" href="#obec-odmitla">Obec odmítla?</a>'
     else:
         cta_first = '<a class="btn btn--ghost" href="kocky-k-adopci.html">Kočky k adopci</a>'
     nav = "\n".join(f'            <li><a href="{h}">{l}</a></li>' for h, l in NAV)
@@ -320,7 +325,7 @@ def footer(current=""):
 
   <nav class="mobile-cta" aria-label="Rychlé odkazy">
     {cta_first}
-    <a class="btn" href="podporte-nas.html#dar">{ICON["heart"]}Podpořit</a>
+    {cta_second}
   </nav>
 
   <script src="assets/js/main.js?v={ASSET_V}"></script>
@@ -668,6 +673,7 @@ INDEX = f"""
             <a class="btn" href="kocky-k-adopci.html">Chci adoptovat{ICON["arrow"]}</a>
             <a class="btn btn--ghost" href="#pomoc">Chci pomoct</a>
           </div>
+          <p class="hero-found reveal" style="--d:.3s"><a href="nasli-jste-kocku.html">Našli jste kočku nebo koťata?{ICON["arrow"]}</a></p>
           <ul class="hero-trust">
             <li>{ADOPTED} koček už našlo domov</li>
             <li>Adopce bez poplatku</li>
@@ -1349,7 +1355,7 @@ NALEZ = f"""
         <div class="found-steps">
           <div class="found-step reveal"><h3>Městská policie</h3><p>Kde ji mají, volejte <a class="phone" href="tel:156">156</a></p></div>
           <div class="found-step reveal" style="--d:.08s"><h3>Starosta obce</h3><p>Kde městská policie není, volejte starostovi nebo na odbor životního prostředí.</p></div>
-          <div class="found-step reveal" style="--d:.16s"><h3>Až potom útulek</h3><p>Když na obci narazíte, ozvěte se nám. Poradíme a pomůžeme.</p></div>
+          <div class="found-step reveal" style="--d:.16s"><h3>Až potom útulek</h3><p>Když na obci narazíte, ozvěte se nám na <a class="phone" href="tel:{PHONE_TEL}">{PHONE}</a>. Poradíme a pomůžeme.</p></div>
         </div>
       </div>
     </section>
@@ -1378,7 +1384,7 @@ NALEZ = f"""
             <p>Malá koťata bez matky nemusí být opuštěná. Kočka je často jen na lovu a vrátí se.</p>
             <ul>
               <li><strong>Nejdřív pozorujte z dálky</strong>, klidně několik hodin. Pokud se matka vrací, nechte koťata u ní, je to pro ně nejlepší.</li>
-              <li>Pro maličká koťata je větší nebezpečí <strong>chlad než hlad</strong>. Pokud jsou mokrá, studená nebo v ohrožení, zahřejte je (láhev s teplou vodou zabalená v ručníku) a hned volejte.</li>
+              <li>Pro maličká koťata je větší nebezpečí <strong>chlad než hlad</strong>. Pokud jsou mokrá, studená nebo v ohrožení, zahřejte je (láhev s teplou vodou zabalená v ručníku) a hned volejte městskou policii <a href="tel:156">156</a> nebo na obecní úřad. Když nikoho nezastihnete, zavolejte nám: <a href="tel:{PHONE_TEL}">{PHONE}</a>.</li>
               <li>Nekrmte je kravským mlékem. Koťatům škodí.</li>
               <li>Postup s obcí platí i pro koťata. Matku je pak potřeba odchytit a vykastrovat, jinak bude za pár měsíců další vrh.</li>
             </ul>
@@ -1407,7 +1413,7 @@ NALEZ = f"""
               <p><strong>Tip:</strong> Zkuste také službu <a href="https://najdimazlicka.cz/" target="_blank" rel="noopener">Najdi mazlíčka</a>, která hledá ztracená zvířata po celé republice pomocí kampaní na sociálních sítích.</p>
             </div>
           </div>
-          <aside class="aside-card reveal">
+          <aside class="aside-card reveal" id="obec-odmitla">
             <h3>Obec odmítla?</h3>
             <p>Ozvěte se nám. Rádi poradíme, jak postupovat, a pomůžeme s jednáním s obcí.</p>
             <div class="btn-row" style="flex-direction:column">
