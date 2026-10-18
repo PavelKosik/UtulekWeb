@@ -12,7 +12,7 @@ import pathlib
 import re
 import struct
 import sys
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 OUT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
 
@@ -24,7 +24,9 @@ ORG_NAME = "Depozitum chlup - nechlup z.s."
 ORG_ICO = "19405901"
 ORG_SEAT = "Mutěnice 70, 386 01 Mutěnice"
 ORG_REG = "spolek zapsaný ve spolkovém rejstříku u Krajského soudu v Českých Budějovicích, oddíl L, vložka 9221"
-# Veřejná adresa webu (kanonické odkazy, náhledy pro sdílení). Při přechodu na vlastní doménu změňte.
+# Veřejná adresa webu (kanonické odkazy, náhledy pro sdílení, QR kódy). Při přechodu na vlastní doménu
+# stačí změnit tenhle řádek, třeba na "https://www.chlupnechlup.cz/"; soubor CNAME pro GitHub Pages
+# se pak vytvoří sám. Postup je v README v části „Vlastní doména“.
 SITE_URL = "https://pavelkosik.github.io/UtulekWeb/"
 
 JUSTICE_DOCS = "https://or.justice.cz/ias/ui/vypis-sl-firma?subjektId=1208050"
@@ -1786,6 +1788,12 @@ if __name__ == "__main__":
     page("404.html", "Stránka nenalezena", "Tahle stránka na webu Depozita chlup-nechlup neexistuje. Zkuste úvod nebo kočky k adopci.", NOT_FOUND)
     (OUT / "manifest.webmanifest").write_text(MANIFEST + "\n", encoding="utf-8")
     (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+    host = urlparse(SITE_URL).hostname
+    cname = OUT / "CNAME"
+    if host.endswith(".github.io"):
+        cname.unlink(missing_ok=True)
+    else:
+        cname.write_text(host + "\n", encoding="utf-8")
     urls = "\n".join(f"  <url><loc>{SITE_URL}{u}</loc></url>" for u in SITEMAP_PAGES)
     (OUT / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}\n</urlset>\n', encoding="utf-8")
     page("soukromi.html", "Soukromí a cookies", "Jak web Depozita chlup-nechlup zachází s osobními údaji a cookies, co načítá widget Pesweb.cz a jaká máte práva.", SOUKROMI)

@@ -97,6 +97,19 @@ git push origin HEAD:gh-pages
 
 Po pár desítkách vteřin se změna objeví na webu.
 
+## Vlastní doména
+
+Na adrese github.io web vyhledávače skoro nenajdou a na plakátech je dlouhá. Doména `.cz` stojí zhruba 200–250 Kč ročně (třeba Forpsi nebo Active24).
+
+1. Kupte doménu, například `chlupnechlup.cz`, pokud je volná.
+2. U registrátora nastavte DNS:
+   - čtyři záznamy `A` pro samotnou doménu: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`;
+   - záznam `CNAME` pro `www`: `pavelkosik.github.io`.
+3. V `tools/build.py` změňte `SITE_URL` na novou adresu (např. `https://www.chlupnechlup.cz/`), spusťte `python3 tools/build.py` (vytvoří i soubor `CNAME` a nové QR kódy) a nasaďte do `gh-pages`.
+4. Na GitHubu v Settings → Pages vyplňte Custom domain a po ověření zapněte *Enforce HTTPS*.
+5. Spusťte `node tools/og_images.js`, ať mají náhledy pro sdílení novou adresu, a vytiskněte nové plakáty. Staré odkazy na github.io GitHub sám přesměruje na novou doménu.
+6. Novou adresu dejte na Facebook, Instagram, Pesweb a na starý web na Webnode.
+
 ## Fotky
 
 Fotky v `assets/img/` jsou převzaté z původního webu depozita (webnode), fotky v `assets/img/domov/` a `celesta.jpg` z inzerátů depozita na Pesweb.cz. Všechny jsou zmenšené pro web.
