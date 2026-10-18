@@ -493,7 +493,7 @@ def spending_chart():
 def tax_box():
     return f"""<div class="mailto-box reveal">
           <h3>Potvrzení o daru pro daňové přiznání</h3>
-          <p>Dary na ochranu opuštěných zvířat si můžete odečíst od základu daně, pokud za rok darujete všem organizacím dohromady aspoň 1 000 Kč nebo 2 % základu daně. Napište nám do konce ledna své jméno, adresu a e-mail a pošleme vám potvrzení. Do zprávy pro příjemce u platby prosím uveďte své jméno, abychom dar dohledali.</p>
+          <p>Dary na ochranu opuštěných zvířat si můžete odečíst od základu daně, pokud za rok darujete všem organizacím dohromady aspoň 1 000 Kč nebo 2 % základu daně. Potřebujete potvrzení o daru? Napište nám své jméno, adresu a e-mail. Do zprávy pro příjemce u platby prosím uveďte své jméno, abychom dar dohledali.</p>
           <a class="btn btn--ghost" href="mailto:{EMAIL}?subject=Potvrzen%C3%AD%20o%20daru">{ICON["mail"]}Požádat o potvrzení</a>
         </div>"""
 
@@ -1055,7 +1055,7 @@ ADOPCE = f"""
           </details>
           <details>
             <summary>Jsem starší, můžu si kočku vzít?</summary>
-            <div class="faq__body"><p>Ano. Doporučíme vám klidnou dospělou kočku, která se k vám hodí, a domluvíme se, kdo by se o ni postaral, kdybyste nemohli.</p></div>
+            <div class="faq__body"><p>Ozvěte se Ditě a řekněte jí, jak bydlíte. Do klidné domácnosti se často hodí dospělá kočka, která už má usazenou povahu. Dobré je mít domluveno, kdo by se o kočku postaral, kdybyste nemohli vy.</p></div>
           </details>
           <details>
             <summary>Pes na zahradě a kočka zvyklá chodit ven</summary>
@@ -1534,7 +1534,11 @@ PROOBCE = f"""
             <h2 class="reveal">Smlouva a měsíční příspěvek</h2>
             <p class="reveal">Město Strakonice má s depozitem od roku 2024 smlouvu a přispívá {fmt_kc(CITY_MONTHLY)} měsíčně. To pokryje zhruba třetinu nákladů, zbytek platí dárci. Nalezené kočky ze Strakonic díky tomu mají kam jít.</p>
             <h3 class="reveal">Než zavoláte</h3>
-            <p class="reveal">Depozitum má 20 míst a v sezóně koťat bývá plné. Proto se domlouváme předem a rozsah i příspěvek obce nastavujeme tak, aby to zvládly obě strany.</p>
+            <p class="reveal">Depozitum má 20 míst a v sezóně koťat bývá plné. Proto se prosím ozvěte předem, ať se domluvíme, co jde zvládnout.</p>
+            <blockquote class="reveal">
+              <p>„Bylo by pro mě snazší, kdyby město vybudovalo útulek. Já bych byla ochotná pomoct, poradit či i někoho zaškolit, protože to není jenom tak.“</p>
+              <p style="margin:0"><strong>Dita Uhriková</strong> pro <a href="https://www.jcted.cz/kocicimu-depozitu-chlup-nechlup-financne-pomuze-mesto-strakonice/" target="_blank" rel="noopener">Jižní Čechy Teď</a>, srpen 2024</p>
+            </blockquote>
           </div>
           <div class="prose">
             <p class="eyebrow">Co říká zákon</p>
