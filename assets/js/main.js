@@ -3,6 +3,7 @@
   "use strict";
 
   var root = document.documentElement;
+  window.__siteReady = true; // pojistka v <head> už nemusí zobrazovat obsah bez animací
   root.classList.remove("js-off");
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -118,58 +119,64 @@
 
   var update = function () {
     ticking = false;
+    // 1) Nejdřív všechna měření, pak všechny zápisy: prohlížeč pak nemusí
+    //    přepočítávat layout po každém kroku (forced reflow).
     var y = window.scrollY;
     var vh = window.innerHeight;
-    var docH = document.documentElement.scrollHeight - vh;
+    var docH = root.scrollHeight - vh;
+    var navOpen = document.body.classList.contains("nav-open");
+    var heroH = [], para = [], mq = [], stmt = [], stepRects = [];
+    if (!reduceMotion) {
+      heroes.forEach(function (h) { heroH.push(h.offsetHeight); });
+      parallax.forEach(function (el) { para.push(el.getBoundingClientRect()); });
+      marquees.forEach(function (el) { mq.push([el.getBoundingClientRect(), el.firstElementChild.scrollWidth, el.clientWidth]); });
+      statements.forEach(function (el) { stmt.push(el.getBoundingClientRect()); });
+      steps.forEach(function (s) { stepRects.push(s.getBoundingClientRect()); });
+    }
 
+    // 2) Zápisy
     root.style.setProperty("--page-progress", docH > 0 ? clamp(y / docH).toFixed(4) : 0);
-
     if (header) {
       header.classList.toggle("is-scrolled", y > 12);
-      var goingDown = y > lastY;
-      header.classList.toggle("is-hidden", goingDown && y > 420 && !document.body.classList.contains("nav-open"));
+      header.classList.toggle("is-hidden", y > lastY && y > 420 && !navOpen);
     }
     lastY = y;
 
     if (reduceMotion) return;
 
-    heroes.forEach(function (h) {
-      var p = clamp(y / Math.max(1, h.offsetHeight));
-      h.style.setProperty("--hero-p", p.toFixed(4));
+    heroes.forEach(function (h, i) {
+      h.style.setProperty("--hero-p", clamp(y / Math.max(1, heroH[i])).toFixed(4));
     });
 
     // --p: 0 když prvek vjíždí zespodu, 1 když opouští horní okraj
-    parallax.forEach(function (el) {
-      var r = el.getBoundingClientRect();
+    parallax.forEach(function (el, i) {
+      var r = para[i];
       if (r.bottom < -100 || r.top > vh + 100) return;
       el.style.setProperty("--p", clamp((vh - r.top) / (vh + r.height)).toFixed(4));
     });
 
-    marquees.forEach(function (el) {
-      var r = el.getBoundingClientRect();
+    marquees.forEach(function (el, i) {
+      var r = mq[i][0];
       if (r.bottom < 0 || r.top > vh) return;
-      var track = el.firstElementChild;
-      var max = Math.max(0, track.scrollWidth - el.clientWidth);
       var p = clamp((vh - r.top) / (vh + r.height));
-      track.style.setProperty("--mq", (p * max).toFixed(1));
+      el.firstElementChild.style.setProperty("--mq", (p * Math.max(0, mq[i][1] - mq[i][2])).toFixed(1));
     });
 
-    statements.forEach(function (el) {
-      var r = el.getBoundingClientRect();
+    statements.forEach(function (el, i) {
+      var r = stmt[i];
       // osvětlení začne, když je text v 85 % výšky okna, a skončí ve 35 %
-      var p = clamp((vh * 0.85 - r.top) / (vh * 0.5 + r.height * 0.6));
-      var lit = Math.round(p * el._words.length);
-      el._words.forEach(function (w, i) { w.classList.toggle("is-lit", i < lit); });
+      var lit = Math.round(clamp((vh * 0.85 - r.top) / (vh * 0.5 + r.height * 0.6)) * el._words.length);
+      if (lit === el._lit) return;
+      el._lit = lit;
+      el._words.forEach(function (w, j) { w.classList.toggle("is-lit", j < lit); });
     });
 
     if (steps.length) {
       var mid = vh * 0.5;
       var current = 0;
-      steps.forEach(function (s, i) {
-        var r = s.getBoundingClientRect();
+      stepRects.forEach(function (r, i) {
         if (r.top < mid) current = i;
-        var fill = clamp((mid - r.top) / Math.max(1, r.height));
-        if (bars[i]) bars[i].style.setProperty("--fill", fill.toFixed(3));
+        if (bars[i]) bars[i].style.setProperty("--fill", clamp((mid - r.top) / Math.max(1, r.height)).toFixed(3));
       });
       if (current !== activeStep) {
         activeStep = current;
@@ -213,6 +220,9 @@
         var cfg = JSON.parse(el.getAttribute("data-pesweb"));
         cfg.container = el;
         window.PeswebWidget.init(cfg);
+        // widget dává iframu role="region", což iframe mít nesmí (WCAG); název má z title
+        var frame = el.querySelector("iframe");
+        if (frame) frame.removeAttribute("role");
       } catch (e) { /* zůstane záložní odkaz */ }
     });
   };
@@ -260,6 +270,7 @@
     var qr = card && card.querySelector(".account__qr img");
     var caption = card && card.querySelector(".account__qr span");
     var impact = card && card.querySelector(".impact");
+    var save = card && card.querySelector(".qr-save");
     buttons.forEach(function (b) {
       b.addEventListener("click", function () {
         buttons.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
@@ -270,6 +281,10 @@
         }
         if (caption) caption.textContent = amount ? "QR platba " + amount + " Kč" : "QR platba, částku zadáte v aplikaci banky";
         if (impact) impact.innerHTML = b.getAttribute("data-impact");
+        if (save) {
+          save.href = b.getAttribute("data-png");
+          save.setAttribute("download", "qr-platba-depozitum" + (amount ? "-" + amount : "") + ".png");
+        }
       });
     });
   });
@@ -314,6 +329,17 @@
       }
     });
   });
+
+  /* ---------- Spodní lišta na mobilu: ukáže se mimo úvod, patičku a sekci daru ---------- */
+  var cta = document.querySelector(".mobile-cta");
+  if (cta && "IntersectionObserver" in window) {
+    var blockers = [].slice.call(document.querySelectorAll(".hero, .page-hero, .site-footer, #dar"));
+    var bio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { e.target._inView = e.isIntersecting; });
+      cta.classList.toggle("is-visible", !blockers.some(function (b) { return b._inView; }));
+    });
+    blockers.forEach(function (b) { bio.observe(b); });
+  }
 
   /* ---------- Rok v patičce ---------- */
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });

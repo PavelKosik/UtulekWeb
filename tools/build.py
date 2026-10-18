@@ -8,7 +8,10 @@ QR kódy se přegenerují jen tehdy, když je nainstalovaný balíček `qrcode`
 """
 import json
 import pathlib
+import re
+import struct
 import sys
+from urllib.parse import quote
 
 OUT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
 
@@ -20,10 +23,13 @@ ORG_NAME = "Depozitum chlup - nechlup z.s."
 ORG_ICO = "19405901"
 ORG_SEAT = "Mutěnice 70, 386 01 Mutěnice"
 ORG_REG = "spolek zapsaný ve spolkovém rejstříku u Krajského soudu v Českých Budějovicích, oddíl L, vložka 9221"
+# Veřejná adresa webu (kanonické odkazy, náhledy pro sdílení). Při přechodu na vlastní doménu změňte.
+SITE_URL = "https://pavelkosik.github.io/UtulekWeb/"
+
 JUSTICE_DOCS = "https://or.justice.cz/ias/ui/vypis-sl-firma?subjektId=1208050"
 CITY_CATS = "https://www.strakonice.eu/nalezenekocky"
 
-PHONE = "+420 607 707 537"
+PHONE = "+420\u00a0607\u00a0707\u00a0537"  # nezlomitelné mezery, číslo se nerozdělí na dva řádky
 PHONE_TEL = "+420607707537"
 EMAIL = "ditau@email.cz"
 ACCOUNT = "6077760777/2010"
@@ -126,6 +132,7 @@ ICON = {
     "ig": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>',
     "search": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
     "print": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>',
+    "download": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>',
     "check": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
 }
 PAW_PATHS = ICON["paw"][ICON["paw"].index(">") + 1:-6]
@@ -139,9 +146,13 @@ NAV = [
 ]
 
 # Písma jsou hostovaná lokálně (assets/fonts), aby web neposílal IP adresy návštěvníků Googlu.
+FONT_FACES = (OUT / "assets/fonts/fonts.css").read_text(encoding="utf-8").replace("url(", "url(assets/fonts/")
+FONT_FACES = re.sub(r"/\*.*?\*/\s*", "", FONT_FACES, flags=re.S)
+FONT_FACES = re.sub(r"\s*\n\s*", "", FONT_FACES)
 FONTS = (
     '<link rel="preload" href="assets/fonts/fraunces-normal-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
-    '  <link rel="stylesheet" href="assets/fonts/fonts.css">'
+    '  <link rel="preload" href="assets/fonts/figtree-normal-latin.woff2" as="font" type="font/woff2" crossorigin>\n'
+    f'  <style>{FONT_FACES}</style>'
 )
 
 JSONLD = json.dumps({
@@ -153,7 +164,10 @@ JSONLD = json.dumps({
     "description": "Domácí depozitum pro odchyt, léčbu a kastraci koček ze Strakonic a okolí.",
     "address": {"@type": "PostalAddress", "addressLocality": "Mutěnice", "postalCode": "386 01", "addressRegion": "Jihočeský kraj", "addressCountry": "CZ"},
     "areaServed": "Strakonice a okolí",
-    "telephone": PHONE,
+    "url": SITE_URL,
+    "logo": SITE_URL + "assets/img/icon-512.png",
+    "image": SITE_URL + "assets/img/og/og-uvod.jpg",
+    "telephone": PHONE_TEL,
     "email": EMAIL,
     "sameAs": [FB, IG, PESWEB],
 }, ensure_ascii=False)
@@ -163,26 +177,60 @@ JSONLD = json.dumps({
 # Společné části
 # ---------------------------------------------------------------------------
 
+# Náhledový obrázek pro sdílení (1200×630) podle stránky, viz tools/og_images.js
+OG = {
+    "index.html": "og-uvod.jpg",
+    "kocky-k-adopci.html": "og-adopce.jpg",
+    "nasli-domov.html": "og-domov.jpg",
+    "docasna-pece.html": "og-docaska.jpg",
+    "podporte-nas.html": "og-podpora.jpg",
+    "nasli-jste-kocku.html": "og-nalez.jpg",
+}
+
+# Skript v <head>: skryje animované prvky ještě před prvním vykreslením (bez probliknutí).
+# Kdyby se main.js nenačetl, po 4 s se vše zobrazí.
+HEAD_SCRIPT = (
+    '<script>document.documentElement.classList.remove("js-off");'
+    'setTimeout(function(){if(!window.__siteReady)document.documentElement.classList.add("js-off")},4000);</script>'
+)
+
+# Přednačtení podstránek při najetí myší (Chrome); jen vlastní stránky, nic externího.
+SPECULATION = '<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"*.html","relative_to":"document"},"eagerness":"moderate"}]}</script>'
+
+
 def head(title, desc, current, extra_head=""):
     full = title if current == "index.html" else f"{title} · Depozitum chlup-nechlup Strakonice"
+    url = SITE_URL if current == "index.html" else SITE_URL + current
+    og_image = SITE_URL + "assets/img/og/" + OG.get(current, "og-uvod.jpg")
+    # 404 se zobrazuje i na vnořených adresách, proto absolutní základ a žádné indexování
+    base = f'\n  <base href="{SITE_URL}">\n  <meta name="robots" content="noindex">' if current == "404.html" else ""
     return f"""<!doctype html>
 <html lang="cs" class="js-off">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8">{base}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{full}</title>
   <meta name="description" content="{desc}">
-  <meta name="theme-color" content="#f7f0e5">
+  <link rel="canonical" href="{url}">
+  <meta name="theme-color" content="#f7f0e5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1c1612" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Depozitum chlup-nechlup">
+  <meta property="og:url" content="{url}">
   <meta property="og:title" content="{full}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="assets/img/kocka-tuxedo.jpg">
+  <meta property="og:image" content="{og_image}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  {HEAD_SCRIPT}
   {FONTS}
-  <link rel="stylesheet" href="assets/css/style.css">{extra_head}
+  <link rel="stylesheet" href="assets/css/style.css">
+  {SPECULATION}{extra_head}
 </head>
 <body>
   <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
@@ -199,7 +247,7 @@ def header(current):
     )
     return f"""  <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="index.html" aria-label="Depozitum chlup-nechlup — úvod">
+      <a class="brand" href="index.html">
         {ICON["paw"]}
         <span>chlup-nechlup<small>Depozitum pro kočky · Strakonice</small></span>
       </a>
@@ -212,7 +260,11 @@ def header(current):
   </header>"""
 
 
-def footer():
+def footer(current=""):
+    if current == "kocky-k-adopci.html":
+        cta_first = f'<a class="btn btn--ghost" href="{adoption_mailto()}">{ICON["mail"]}Napsat Ditě</a>'
+    else:
+        cta_first = '<a class="btn btn--ghost" href="kocky-k-adopci.html">Kočky k adopci</a>'
     nav = "\n".join(f'            <li><a href="{h}">{l}</a></li>' for h, l in NAV)
     return f"""  </main>
 
@@ -229,7 +281,7 @@ def footer():
           </div>
         </div>
         <div>
-          <h4>Web</h4>
+          <h2 class="footer-title">Web</h2>
           <ul>
             <li><a href="index.html">Úvod</a></li>
 {nav}
@@ -238,7 +290,7 @@ def footer():
           </ul>
         </div>
         <div>
-          <h4>Kontakt</h4>
+          <h2 class="footer-title">Kontakt</h2>
           <ul>
             <li>Mutěnice u Strakonic</li>
             <li>Návštěvy jen po domluvě</li>
@@ -247,7 +299,7 @@ def footer():
           </ul>
         </div>
         <div>
-          <h4>Transparentní účet</h4>
+          <h2 class="footer-title">Transparentní účet</h2>
           <ul>
             <li><strong>{ACCOUNT}</strong></li>
             <li>Fio banka</li>
@@ -261,6 +313,11 @@ def footer():
       </div>
     </div>
   </footer>
+
+  <nav class="mobile-cta" aria-label="Rychlé odkazy">
+    {cta_first}
+    <a class="btn" href="podporte-nas.html#dar">{ICON["heart"]}Podpořit</a>
+  </nav>
 
   <script src="assets/js/main.js"></script>
 </body>
@@ -300,8 +357,8 @@ def share(text, url="", label="Sdílet:"):
         </div>"""
 
 
-def qr_file(amount):
-    return f"assets/img/qr-platba-{amount}.svg" if amount else "assets/img/qr-platba.svg"
+def qr_file(amount, ext="svg"):
+    return f"assets/img/qr-platba-{amount}.{ext}" if amount else f"assets/img/qr-platba.{ext}"
 
 
 def account_card(extra_class=""):
@@ -313,7 +370,7 @@ def account_card(extra_class=""):
             default_impact = impact
         label = f"{amount:,} Kč".replace(",", " ") if amount else "Jiná"
         buttons.append(
-            f'<button type="button" data-amount="{amount or ""}" data-qr="{qr_file(amount)}" '
+            f'<button type="button" data-amount="{amount or ""}" data-qr="{qr_file(amount)}" data-png="{qr_file(amount, "png")}" '
             f'data-impact="{impact.replace(chr(34), "&quot;")}" aria-pressed="{pressed}">{label}</button>'
         )
     return f"""<div class="account {extra_class}" data-progress>
@@ -329,10 +386,12 @@ def account_card(extra_class=""):
               <button class="btn" type="button" data-copy="{ACCOUNT}">{ICON["copy"]}<span>Kopírovat číslo účtu</span></button>
               <a class="btn btn--ghost" href="{FIO}" target="_blank" rel="noopener">Pohyby na účtu{ICON["external"]}</a>
             </div>
+            <p class="mobile-hint">Platíte z mobilu? Uložte si QR kód a v aplikaci banky ho nahrajte z galerie (QR platba → z obrázku). Nebo zkopírujte číslo účtu.</p>
           </div>
           <div class="account__qr">
             <img src="{qr_file(DEFAULT_AMOUNT)}" alt="QR platba {DEFAULT_AMOUNT} Kč na transparentní účet" width="130" height="130">
             <span>QR platba {DEFAULT_AMOUNT} Kč</span>
+            <a class="qr-save" href="{qr_file(DEFAULT_AMOUNT, "png")}" download="qr-platba-depozitum-{DEFAULT_AMOUNT}.png">{ICON["download"]}Uložit QR</a>
           </div>
         </div>"""
 
@@ -402,7 +461,7 @@ def cta_band(title, text, href, label):
 
 def gallery(items):
     figs = "\n".join(
-        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{name}, kočka, která už našla domov" width="{w}" height="{h}" loading="lazy"><figcaption>{name}</figcaption></figure>'
+        f'          <figure class="reveal" style="--d:{(i % 4) * 0.06:.2f}s"><img src="assets/img/domov/{slug}.jpg" alt="{name}, kočka, která už našla domov" width="{w}" height="{h}" loading="lazy" sizes="(max-width: 520px) 92vw, (max-width: 1000px) 45vw, 270px"><figcaption>{name}</figcaption></figure>'
         for i, (slug, name, w, h) in enumerate(items)
     )
     return f'<div class="gallery">\n{figs}\n        </div>'
@@ -416,7 +475,7 @@ def appeal_block():
     <section class="section--tight" style="padding-top:0;padding-bottom:clamp(40px,6vw,72px)" aria-labelledby="vyzva-nadpis">
       <div class="wrap">
         <div class="appeal reveal">
-          <div class="appeal__media"><img src="{a["image"]}" alt="{a["name"]}" loading="lazy"></div>
+          <div class="appeal__media"><img src="{a["image"]}" alt="{a["name"]}" loading="lazy" sizes="(max-width: 560px) 92vw, 220px"></div>
           <div>
             <span class="appeal__badge">{a["badge"]}</span>
             <h2 id="vyzva-nadpis">{a["title"]}</h2>
@@ -425,7 +484,7 @@ def appeal_block():
           <div class="appeal__actions">
             <a class="btn" href="{PESWEB_CAT}{a["slug"]}" target="_blank" rel="noopener">Profil: {a["name"]}{ICON["external"]}</a>
             <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}Zavolat Ditě</a>
-            <a class="btn btn--ghost" href="{FB}" target="_blank" rel="noopener">{ICON["share"]}Sdílet na FB</a>
+            <a class="btn btn--ghost" href="https://www.facebook.com/sharer/sharer.php?u={quote(PESWEB_CAT + a["slug"], safe="")}" target="_blank" rel="noopener">{ICON["share"]}Sdílet na Facebooku</a>
           </div>
         </div>
       </div>
@@ -461,8 +520,67 @@ def foster_mailto():
     return f"mailto:{EMAIL}?subject={quote('Dočasná péče')}&amp;body={quote(body)}"
 
 
+def image_size(path):
+    """Rozměry JPEG/WebP bez Pillow (z hlavičky souboru)."""
+    data = path.read_bytes()
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        kind = data[12:16]
+        if kind == b"VP8 ":
+            w, h = struct.unpack("<HH", data[26:30])
+            return w & 0x3FFF, h & 0x3FFF
+        if kind == b"VP8L":
+            b = data[21:25]
+            return 1 + (((b[1] & 0x3F) << 8) | b[0]), 1 + (((b[3] & 0xF) << 10) | (b[2] << 2) | ((b[1] & 0xC0) >> 6))
+        if kind == b"VP8X":
+            return 1 + int.from_bytes(data[24:27], "little"), 1 + int.from_bytes(data[27:30], "little")
+    i = 2
+    while i < len(data):
+        if data[i] != 0xFF:
+            i += 1
+            continue
+        marker = data[i + 1]
+        if marker in (0xC0, 0xC1, 0xC2):
+            h, w = struct.unpack(">HH", data[i + 5:i + 9])
+            return w, h
+        i += 2 + struct.unpack(">H", data[i + 2:i + 4])[0]
+    return None
+
+
+def picture(match):
+    """<img src="assets/img/x.jpg" …> → <picture> s WebP variantami (vytváří tools/optimize_images.py)."""
+    tag, src = match.group(0), match.group(1)
+    jpg = OUT / src
+    if "data-noopt" in tag or not jpg.exists():
+        return tag.replace(" data-noopt", "")
+    if " width=" not in tag:
+        size = image_size(jpg)
+        if size:
+            tag = tag.replace("<img ", f'<img width="{size[0]}" height="{size[1]}" ', 1)
+    if "loading=\"lazy\"" in tag and "decoding=" not in tag:
+        tag = tag.replace("<img ", '<img decoding="async" ', 1)
+    variants = []
+    for w in (400, 800):
+        webp = jpg.with_name(f"{jpg.stem}-{w}.webp")
+        if webp.exists():
+            size = image_size(webp)
+            variants.append(f"{src.rsplit('/', 1)[0]}/{webp.name} {size[0] if size else w}w")
+    if not variants:
+        return tag
+    sizes = re.search(r'sizes="([^"]+)"', tag)
+    sizes = sizes.group(1) if sizes else "(max-width: 860px) 92vw, 540px"
+    tag = re.sub(r'\s*sizes="[^"]+"', "", tag)
+    return f'<picture><source type="image/webp" srcset="{", ".join(variants)}" sizes="{sizes}">{tag}</picture>'
+
+
+def hero_now(match):
+    """Úvod stránky se ukáže hned (CSS animace), nečeká na JavaScript; zrychlí to LCP."""
+    return match.group(0).replace("reveal reveal--scale", "hero-in").replace(" reveal", " hero-in").replace('class="reveal', 'class="hero-in')
+
+
 def page(name, title, desc, body, extra_head=""):
-    html = head(title, desc, name, extra_head) + body + footer()
+    body = re.sub(r'<section class="(?:hero|page-hero)[^"]*">.*?</section>', hero_now, body, count=1, flags=re.S)
+    body = re.sub(r'<img [^>]*src="(assets/img/[^"]+\.jpg)"[^>]*>', picture, body)
+    html = head(title, desc, name, extra_head) + body + footer(name)
     (OUT / name).write_text(html, encoding="utf-8")
     print("wrote", name, len(html))
 
@@ -483,6 +601,11 @@ def make_qr():
         svg = path.read_text(encoding="utf-8")
         svg = svg.replace('width="', 'data-w="', 1).replace('height="', 'data-h="', 1)
         path.write_text(svg, encoding="utf-8")
+        if name.startswith("qr-platba"):
+            try:  # PNG pro uložení do telefonu (bankovní aplikace umí QR z galerie)
+                qrcode.make(data, box_size=14, border=3).save(str(path.with_suffix(".png")))
+            except Exception as e:  # bez Pillow se PNG nevytvoří
+                print("PNG QR se nevytvořil:", e)
     print("QR kódy:", ", ".join(codes))
 
 
@@ -509,9 +632,9 @@ INDEX = f"""
           </ul>
         </div>
         <div class="collage reveal reveal--scale" style="--d:.1s" aria-hidden="true">
-          <figure class="c1"><img src="assets/img/kocka-tuxedo.jpg" alt="" width="959" height="652" fetchpriority="high"></figure>
-          <figure class="c2"><img src="assets/img/xantipa.jpg" alt="" width="527" height="938"></figure>
-          <figure class="c3"><img src="assets/img/eliot-a-emil.jpg" alt="" width="960" height="720"></figure>
+          <figure class="c1"><img src="assets/img/kocka-tuxedo.jpg" alt="" width="959" height="652" fetchpriority="high" sizes="(max-width: 860px) 70vw, 460px"></figure>
+          <figure class="c2"><img src="assets/img/xantipa.jpg" alt="" width="527" height="938" sizes="(max-width: 860px) 40vw, 260px"></figure>
+          <figure class="c3"><img src="assets/img/eliot-a-emil.jpg" alt="" width="960" height="720" sizes="(max-width: 860px) 45vw, 280px"></figure>
           <div class="sticker"><span><strong>{LISTED}</strong>inzerátů právě hledá domov</span></div>
         </div>
       </div>
@@ -530,11 +653,11 @@ INDEX = f"""
           <button type="button" role="tab" id="tab-cekaji" aria-controls="panel-cekaji" aria-selected="true">Čekají nejdéle</button>
           <button type="button" role="tab" id="tab-nove" aria-controls="panel-nove" aria-selected="false" tabindex="-1">Nově v depozitu</button>
         </div>
-        <div class="tab-panel" id="panel-cekaji" role="tabpanel" aria-labelledby="tab-cekaji">
+        <div class="tab-panel" id="panel-cekaji" role="tabpanel" tabindex="0" aria-labelledby="tab-cekaji">
           <p class="tab-intro">Tyhle kočky jsou u nás nejdéle, některé i několik let. Často jsou to dospělé, plaché nebo starší kočky, které potřebují trpělivého člověka. Odmění se mu ale celou duší.</p>
           {widget({"sort": "foundDate:asc"}, {"itemsPerPage": 6}, reveal=False)}
         </div>
-        <div class="tab-panel" id="panel-nove" role="tabpanel" aria-labelledby="tab-nove" hidden>
+        <div class="tab-panel" id="panel-nove" role="tabpanel" tabindex="0" aria-labelledby="tab-nove" hidden>
           <p class="tab-intro">Nejnovější přírůstky, které už prošly karanténou a hledají domov. Na jaře a v létě jsou to hlavně koťata.</p>
           {widget({"sort": "createdAt:desc"}, {"itemsPerPage": 6}, reveal=False)}
         </div>
@@ -567,36 +690,36 @@ INDEX = f"""
         <div class="journey" data-journey>
           <div class="journey__media" aria-hidden="true">
             <span class="journey__label">Odchyt</span>
-            <img src="assets/img/odchyt.jpg" alt="" class="is-active" loading="lazy">
-            <img src="assets/img/kocka-cerna.jpg" alt="" loading="lazy">
-            <img src="assets/img/cassie.jpg" alt="" loading="lazy">
-            <img src="assets/img/eliot-a-emil.jpg" alt="" loading="lazy">
-            <img src="assets/img/kote-choi.jpg" alt="" loading="lazy">
+            <img src="assets/img/odchyt.jpg" alt="" class="is-active" loading="lazy" sizes="540px">
+            <img src="assets/img/kocka-cerna.jpg" alt="" loading="lazy" sizes="540px">
+            <img src="assets/img/cassie.jpg" alt="" loading="lazy" sizes="540px">
+            <img src="assets/img/eliot-a-emil.jpg" alt="" loading="lazy" sizes="540px">
+            <img src="assets/img/kote-choi.jpg" alt="" loading="lazy" sizes="540px">
             <div class="journey__meter"><span></span><span></span><span></span><span></span><span></span></div>
           </div>
           <ol class="journey__steps">
             <li class="journey__step is-active" data-label="Odchyt">
-              <img class="mobile-img" src="assets/img/odchyt.jpg" alt="Kočka v přepravce po odchytu" loading="lazy">
+              <img class="mobile-img" sizes="92vw" src="assets/img/odchyt.jpg" alt="Kočka v přepravce po odchytu" loading="lazy">
               <h3>Odchyt</h3>
               <p>Sbíráme celé vrhy, dohledáváme a po nocích naháníme kočky, které se ocitly na ulici. Často čekají u nálezců nebo tam, kam je chodí krmit ohleduplní lidé.</p>
             </li>
             <li class="journey__step" data-label="Karanténa a léčba">
-              <img class="mobile-img" src="assets/img/kocka-cerna.jpg" alt="Černá kočka v karanténní kleci" loading="lazy">
+              <img class="mobile-img" sizes="92vw" src="assets/img/kocka-cerna.jpg" alt="Černá kočka v karanténní kleci" loading="lazy">
               <h3>Karanténa a léčba</h3>
               <p>Každá kočka projde karanténou. Kočky z různých lokalit ubytováváme odděleně a přísně dbáme na hygienu, aby se nemoci nepřenášely.</p>
             </li>
             <li class="journey__step" data-label="Kastrace">
-              <img class="mobile-img" src="assets/img/cassie.jpg" alt="Želvovinová kočka Cassie" loading="lazy">
+              <img class="mobile-img" sizes="92vw" src="assets/img/cassie.jpg" alt="Želvovinová kočka Cassie" loading="lazy">
               <h3>Kastrace</h3>
               <p>Bez kastrace se kruh nezastaví. Dospělé kočky od nás odcházejí kastrované, u koťat je kastrace v dospělosti podmínkou adopce.</p>
             </li>
             <li class="journey__step" data-label="Dočasná péče">
-              <img class="mobile-img" src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil" loading="lazy">
+              <img class="mobile-img" sizes="92vw" src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil" loading="lazy">
               <h3>Dočasná péče</h3>
               <p>Zdravé kočky se stěhují do domácích depozit. Tam se mazlí, zvykají si na lidi a my je díky tomu líp poznáme.</p>
             </li>
             <li class="journey__step" data-label="Nový domov">
-              <img class="mobile-img" src="assets/img/kote-choi.jpg" alt="Kotě Choi v novém domově" loading="lazy">
+              <img class="mobile-img" sizes="92vw" src="assets/img/kote-choi.jpg" alt="Kotě Choi v novém domově" loading="lazy">
               <h3>Nový domov</h3>
               <p>Hledáme pro každou kočku spřízněnou duši: stabilní a bezpečný domov na adopční smlouvu. A uvolněné místo hned obsadí další kočka z ulice.</p>
               <div class="btn-row"><a class="btn" href="#kocky">Kdo hledá domov{ICON["arrow"]}</a></div>
@@ -649,7 +772,7 @@ INDEX = f"""
             <p class="eyebrow">Finanční dar</p>
             <h2 id="dar-nadpis" class="reveal">Každá koruna jde na kočky. A je to vidět.</h2>
             <p class="lead reveal" style="--d:.08s">Z účtu neplatíme žádné mzdy, peníze jdou na krmivo, veterinu a stelivo. Účet je transparentní, každý pohyb si můžete zkontrolovat, a účtenky z nákupů sdílíme na Facebooku.</p>
-            <p class="reveal" style="--d:.12s;opacity:.85">Vyberte částku, naskenujte QR kód v aplikaci své banky a je hotovo.</p>
+            <p class="reveal soft" style="--d:.12s">Vyberte částku, naskenujte QR kód v aplikaci své banky a je hotovo.</p>
           </div>
           {account_card("reveal")}
         </div>
@@ -698,7 +821,7 @@ INDEX = f"""
     <section class="section" aria-labelledby="dita-nadpis">
       <div class="wrap">
         <div class="split">
-          <div class="split__media reveal" data-progress><img src="assets/img/kocka-tuxedo.jpg" alt="Černobílá kočka Zina odpočívá na dece v depozitu" loading="lazy"></div>
+          <div class="split__media reveal" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/kocka-tuxedo.jpg" alt="Černobílá kočka Zina odpočívá na dece v depozitu" loading="lazy"></div>
           <div>
             <p class="eyebrow">Srdce depozita</p>
             <h2 id="dita-nadpis" class="reveal">Za vším stojí Dita.</h2>
@@ -766,10 +889,10 @@ ADOPCE = f"""
           <button type="button" role="tab" id="tab-vse" aria-controls="panel-vse" aria-selected="true">Nejnovější</button>
           <button type="button" role="tab" id="tab-dlouho" aria-controls="panel-dlouho" aria-selected="false" tabindex="-1">Čekají nejdéle</button>
         </div>
-        <div class="tab-panel" id="panel-vse" role="tabpanel" aria-labelledby="tab-vse">
+        <div class="tab-panel" id="panel-vse" role="tabpanel" tabindex="0" aria-labelledby="tab-vse">
           {widget({"sort": "createdAt:desc"}, reveal=False)}
         </div>
-        <div class="tab-panel" id="panel-dlouho" role="tabpanel" aria-labelledby="tab-dlouho" hidden>
+        <div class="tab-panel" id="panel-dlouho" role="tabpanel" tabindex="0" aria-labelledby="tab-dlouho" hidden>
           <p class="tab-intro">Dospělé, plaché a starší kočky čekají nejdéle. Přitom bývají klidnější a víte přesně, jakou povahu si domů berete.</p>
           {widget({"sort": "foundDate:asc"}, reveal=False)}
         </div>
@@ -936,7 +1059,7 @@ DOCASKA = f"""
       <div class="wrap">
         <div class="layout-aside">
           <div class="prose">
-            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" loading="lazy" width="960" height="720"><figcaption>Eliot a Emil v domácím depozitu</figcaption></figure>
+            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" loading="lazy" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil v domácím depozitu</figcaption></figure>
 
             <h2>Proč dočasky pomáhají</h2>
             <ul>
@@ -1040,7 +1163,7 @@ PODPORA = f"""
             <p class="eyebrow">Transparentní účet</p>
             <h2 class="reveal">Pošlete dar na kočičí účet</h2>
             <p class="lead reveal">Majitel účtu: {ORG_NAME}, IČO {ORG_ICO}. Pohyby na účtu si můžete kdykoli prohlédnout na stránkách Fio banky.</p>
-            <p class="reveal" style="opacity:.8">Ne všechny nákupy pro kočičky jsou z výpisu snadno čitelné, a proto na Facebooku sdílíme i účtenky a faktury v albu <a href="{FB_RECEIPTS}" target="_blank" rel="noopener">Transparentní účet</a>.</p>
+            <p class="reveal soft">Ne všechny nákupy pro kočičky jsou z výpisu snadno čitelné, a proto na Facebooku sdílíme i účtenky a faktury v albu <a href="{FB_RECEIPTS}" target="_blank" rel="noopener">Transparentní účet</a>.</p>
           </div>
           {account_card("reveal")}
         </div>
@@ -1173,6 +1296,7 @@ NALEZ = f"""
 
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
+        <h2 class="visually-hidden">Komu volat</h2>
         <div class="found-steps">
           <div class="found-step reveal"><h3>Městská policie</h3><p>Kde ji mají, volejte <a class="phone" href="tel:156">156</a></p></div>
           <div class="found-step reveal" style="--d:.08s"><h3>Starosta obce</h3><p>Kde městská policie není, volejte starostovi nebo na odbor životního prostředí.</p></div>
@@ -1263,7 +1387,7 @@ ONAS = f"""
     <section class="section section--tight" style="padding-top:0">
       <div class="wrap">
         <div class="split">
-          <div class="split__media reveal" data-progress><img src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" loading="lazy"></div>
+          <div class="split__media reveal" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" loading="lazy"></div>
           <div class="prose">
             <h2 class="mt-0">Jak to celé začalo</h2>
             <p>Depozitum vzniklo před více než deseti lety jako malé rodinné zázemí pro nalezené kočičky z okolí. Postupně se rozrostlo do dnešní velikosti.</p>
@@ -1338,9 +1462,9 @@ PLAKAT = f"""
       <div class="wrap">
         <article class="poster">
           <div class="poster__photos">
-            <img src="assets/img/domov/ludvik-lucian.jpg" alt="">
-            <img src="assets/img/kocka-tuxedo.jpg" alt="">
-            <img src="assets/img/domov/xia.jpg" alt="">
+            <img src="assets/img/domov/ludvik-lucian.jpg" alt="" data-noopt>
+            <img src="assets/img/kocka-tuxedo.jpg" alt="" data-noopt>
+            <img src="assets/img/domov/xia.jpg" alt="" data-noopt>
           </div>
           <p class="poster__eyebrow">Depozitum chlup-nechlup · Strakonice</p>
           <h2 class="poster__title">Hledáme domov<br>pro kočky z ulice</h2>
@@ -1375,7 +1499,7 @@ SOUKROMI = f"""
 
           <h2>Cookies</h2>
           <p>Tento web sám žádné cookies neukládá a nepoužívá žádnou analytiku ani reklamní nástroje. Písma jsou uložená přímo na webu, takže se nenačítají od Googlu.</p>
-          <p>Seznam koček k adopci zobrazujeme pomocí widgetu portálu <a href="https://www.pesweb.cz/" target="_blank" rel="noopener">Pesweb.cz</a>. Widget se načítá z jeho serverů a Pesweb (a jeho ochrana Cloudflare) může ukládat technické cookies nutné pro provoz. Odkazy na Facebook, Instagram a WhatsApp jsou obyčejné odkazy; data se těmto službám předají, až když na odkaz kliknete.</p>
+          <p>Seznam koček k adopci zobrazujeme pomocí widgetu portálu <a href="https://www.pesweb.cz/" target="_blank" rel="noopener">Pesweb.cz</a>. Widget se načítá z jeho serverů, až když k němu doscrollujete. Pesweb v něm používá ochranu Cloudflare (technická cookie <code>cf_clearance</code>) a načítá i služby Googlu (Tag Manager, reklamní a souhlasové skripty); o případný souhlas s cookies vás požádá sám. Za zpracování údajů ve widgetu odpovídá provozovatel Pesweb.cz. Odkazy na Facebook, Instagram a WhatsApp jsou obyčejné odkazy; data se těmto službám předají, až když na odkaz kliknete.</p>
 
           <h2>Osobní údaje</h2>
           <p>Web neobsahuje formuláře. Když nám napíšete e-mail nebo zavoláte kvůli adopci, dočasné péči, nálezu kočky nebo potvrzení o daru, použijeme vaše údaje jen k vyřízení vaší žádosti, k uzavření adopční smlouvy a k vystavení potvrzení o daru, a uchováme je jen po dobu nutnou podle zákona.</p>
@@ -1414,6 +1538,38 @@ POSTER_CSS = """
     }
   </style>"""
 
+NOT_FOUND = f"""
+    <section class="page-hero">
+      <div class="wrap">
+        <p class="eyebrow">Chyba 404</p>
+        <h1>Tahle stránka <span class="accent-word">utekla</span>.</h1>
+        <p class="lead">Možná se schovala pod gauč, možná nikdy neexistovala. Zkuste začít znovu od úvodu, nebo se rovnou podívejte, kdo hledá domov.</p>
+        <div class="btn-row">
+          <a class="btn" href="{SITE_URL}">Na úvod{ICON["arrow"]}</a>
+          <a class="btn btn--ghost" href="{SITE_URL}kocky-k-adopci.html">Kočky k adopci</a>
+        </div>
+      </div>
+    </section>
+"""
+
+MANIFEST = json.dumps({
+    "name": "Depozitum chlup-nechlup",
+    "short_name": "chlup-nechlup",
+    "description": "Kočky z ulice ze Strakonic a okolí hledají domov.",
+    "lang": "cs",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#f7f0e5",
+    "theme_color": "#b94f1b",
+    "icons": [
+        {"src": "assets/img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+        {"src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png"},
+        {"src": "assets/img/favicon.svg", "sizes": "any", "type": "image/svg+xml"},
+    ],
+}, ensure_ascii=False, indent=2)
+
+SITEMAP_PAGES = ["", "kocky-k-adopci.html", "nasli-domov.html", "docasna-pece.html", "podporte-nas.html", "nasli-jste-kocku.html", "o-nas.html", "plakat.html", "soukromi.html"]
+
 FAVICON = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#d4612a"/><g fill="#fffaf2" transform="translate(6 6) scale(.75)">{PAW_PATHS}</g></svg>'
 
 if __name__ == "__main__":
@@ -1422,10 +1578,15 @@ if __name__ == "__main__":
     page("index.html", "Depozitum chlup-nechlup · Kočky k adopci Strakonice", "Domácí depozitum pro odchyt, léčbu a kastraci koček ze Strakonic a okolí. Kočky k adopci bez poplatku, dočasná péče a transparentní účet.", INDEX,
          f'\n  <script type="application/ld+json">{JSONLD}</script>')
     page("kocky-k-adopci.html", "Kočky k adopci", "Kočky ze Strakonic a okolí, které hledají stabilní a bezpečný domov. Adopce bez poplatku, jak probíhá a na co se připravit.", ADOPCE)
-    page("nasli-domov.html", "Domov našli", f"Už {ADOPTED} koček z Depozita chlup-nechlup našlo nový domov.", NASLI)
+    page("nasli-domov.html", "Domov našli", f"Už {ADOPTED} koček z Depozita chlup-nechlup ve Strakonicích našlo nový domov. Podívejte se na šťastné konce i na kočky, které ještě čekají.", NASLI)
     page("docasna-pece.html", "Dočasná péče", "Dočasná péče o kočky ze Strakonic: náklady hradí depozitum, vy dáte kočce domov na přechodnou dobu.", DOCASKA)
     page("podporte-nas.html", "Podpořte nás", "Transparentní účet 6077760777/2010, QR platba, trvalý příkaz, věcné dary a sdílení. Jak podpořit Depozitum chlup-nechlup.", PODPORA)
     page("nasli-jste-kocku.html", "Našli jste kočku?", "Co dělat, když najdete toulavou kočku nebo koťata, a jak hledat ztracenou kočku.", NALEZ)
-    page("o-nas.html", "O nás", "Příběh Depozita chlup-nechlup a jeho zakladatelky Dity Uhrikové.", ONAS)
-    page("plakat.html", "Plakát k vytištění", "Plakát A4 s QR kódem na kočky k adopci z Depozita chlup-nechlup.", PLAKAT, POSTER_CSS)
-    page("soukromi.html", "Soukromí a cookies", "Jak web Depozita chlup-nechlup zachází s osobními údaji a cookies.", SOUKROMI)
+    page("o-nas.html", "O nás", "Příběh Depozita chlup-nechlup ze Strakonic a jeho zakladatelky Dity Uhrikové. Kdo nám pomáhá, proč kastrovat a údaje o spolku.", ONAS)
+    page("plakat.html", "Plakát k vytištění", "Plakát A4 k vytištění s QR kódem na kočky k adopci z Depozita chlup-nechlup. Pověste ho u veterináře, v obchodě nebo na obci.", PLAKAT, POSTER_CSS)
+    page("404.html", "Stránka nenalezena", "Tahle stránka na webu Depozita chlup-nechlup neexistuje. Zkuste úvod nebo kočky k adopci.", NOT_FOUND)
+    (OUT / "manifest.webmanifest").write_text(MANIFEST + "\n", encoding="utf-8")
+    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}sitemap.xml\n", encoding="utf-8")
+    urls = "\n".join(f"  <url><loc>{SITE_URL}{u}</loc></url>" for u in SITEMAP_PAGES)
+    (OUT / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}\n</urlset>\n', encoding="utf-8")
+    page("soukromi.html", "Soukromí a cookies", "Jak web Depozita chlup-nechlup zachází s osobními údaji a cookies, co načítá widget Pesweb.cz a jaká máte práva.", SOUKROMI)

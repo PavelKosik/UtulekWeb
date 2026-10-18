@@ -43,6 +43,30 @@ HTML soubory jdou upravovat i přímo, ale při dalším spuštění skriptu se 
 
 QR kódy pro platbu s částkou (`assets/img/qr-platba-*.svg`) se přegenerují, jen když je nainstalovaný balíček `qrcode` (`pip install qrcode`).
 
+## Fotky a náhledy pro sdílení
+
+- `python3 tools/optimize_images.py` vytvoří k fotkám zmenšené WebP verze (400 a 800 px). `tools/build.py` je sám použije v `<picture>`, starší prohlížeče dostanou JPG. Spusťte po přidání nebo výměně fotky (potřebuje Pillow).
+- `node tools/og_images.js` vygeneruje náhledové obrázky pro sdílení na Facebooku a WhatsAppu (`assets/img/og/`, 1200×630) a ikony webu. Potřebuje Playwright.
+
+## Testování
+
+```sh
+npm install
+npx playwright install chromium
+npm test            # otestuje web ve složce (spustí si vlastní server)
+npm run test:live   # otestuje zveřejněný web
+```
+
+Test projde všech 9 stránek a zkontroluje:
+- chyby v konzoli a nenačtené soubory,
+- interní odkazy a kotvy,
+- přetékání do strany na šířkách 320 až 1920 px,
+- interakce: mobilní menu, záložky, volbu částky a QR, kopírování, sdílení, počítadla, „Cestu kočky“, mobilní lištu,
+- režim bez animací a bez JavaScriptu,
+- přístupnost (axe-core) ve světlém i tmavém režimu.
+
+Celoplošné screenshoty a `report.json` uloží do `tests/out/`. Když najde problém, skončí s chybou.
+
 ## Spuštění lokálně
 
 ```sh

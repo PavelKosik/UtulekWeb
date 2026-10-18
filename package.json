@@ -1,0 +1,15 @@
+{
+  "name": "utulekweb",
+  "private": true,
+  "description": "Web Depozita chlup-nechlup: statické stránky, generátor a testy",
+  "scripts": {
+    "build": "python3 tools/build.py",
+    "images": "python3 tools/optimize_images.py && node tools/og_images.js",
+    "test": "node tests/qa.js",
+    "test:live": "node tests/qa.js https://pavelkosik.github.io/UtulekWeb/"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.0",
+    "playwright": "^1.56.0"
+  }
+}

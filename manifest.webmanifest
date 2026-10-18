@@ -1,0 +1,27 @@
+{
+  "name": "Depozitum chlup-nechlup",
+  "short_name": "chlup-nechlup",
+  "description": "Kočky z ulice ze Strakonic a okolí hledají domov.",
+  "lang": "cs",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f0e5",
+  "theme_color": "#b94f1b",
+  "icons": [
+    {
+      "src": "assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
