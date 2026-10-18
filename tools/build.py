@@ -262,7 +262,7 @@ def header(current):
 
 def footer(current=""):
     if current == "kocky-k-adopci.html":
-        cta_first = f'<a class="btn btn--ghost" href="{adoption_mailto()}">{ICON["mail"]}Napsat Ditě</a>'
+        cta_first = f'<a class="btn btn--ghost" href="#dotaznik">{ICON["mail"]}Dotazník</a>'
     else:
         cta_first = '<a class="btn btn--ghost" href="kocky-k-adopci.html">Kočky k adopci</a>'
     nav = "\n".join(f'            <li><a href="{h}">{l}</a></li>' for h, l in NAV)
@@ -483,6 +483,7 @@ def appeal_block():
           </div>
           <div class="appeal__actions">
             <a class="btn" href="{PESWEB_CAT}{a["slug"]}" target="_blank" rel="noopener">Profil: {a["name"]}{ICON["external"]}</a>
+            <a class="btn btn--ghost" href="kocky-k-adopci.html?kocka={quote(a["name"])}#dotaznik">{ICON["heart"]}Mám zájem</a>
             <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}Zavolat Ditě</a>
             <a class="btn btn--ghost" href="https://www.facebook.com/sharer/sharer.php?u={quote(PESWEB_CAT + a["slug"], safe="")}" target="_blank" rel="noopener">{ICON["share"]}Sdílet na Facebooku</a>
           </div>
@@ -491,33 +492,68 @@ def appeal_block():
     </section>"""
 
 
-def adoption_mailto(cat=""):
-    from urllib.parse import quote
-    subject = f"Zájem o adopci{' – ' + cat if cat else ''}"
-    body = (
-        "Dobrý den,\n\nmám zájem o adopci kočičky.\n\n"
-        "O kterou kočičku jde: \n"
-        "Bydlím v (byt / dům / dům se zahradou): \n"
-        "Kdo s námi bydlí (děti a jejich věk, pes, další kočky): \n"
-        "Zkušenosti s kočkami: \n"
-        "Bude kočka chodit ven? \n"
-        "Co od kočičky očekáváme: \n"
-        "Můj telefon: \n\nDěkuji"
-    )
-    return f"mailto:{EMAIL}?subject={quote(subject)}&amp;body={quote(body)}"
+def chips(name, legend, options, kind="radio"):
+    """Skupina čipů (radio/checkbox) pro dotazníky: options = [(hodnota, popisek)]."""
+    items = "".join(f'<label><input type="{kind}" name="{name}" value="{v}"><span>{t}</span></label>' for v, t in options)
+    return f'<fieldset class="chips qf"><legend>{legend}</legend>{items}</fieldset>'
 
 
-def foster_mailto():
-    from urllib.parse import quote
-    body = (
-        "Dobrý den,\n\nzajímá mě dočasná péče.\n\n"
-        "Bydlím v (byt / dům): \n"
-        "Mám samostatnou místnost pro kočku (ano / ne): \n"
-        "Doma mám zvířata (jaká): \n"
-        "Na jak dlouho můžu kočku vzít: \n"
-        "Můj telefon: \n\nDěkuji"
-    )
-    return f"mailto:{EMAIL}?subject={quote('Dočasná péče')}&amp;body={quote(body)}"
+def qform_actions(kind):
+    subject = "Zájem o adopci" if kind == "adopce" else "Dočasná péče"
+    return f"""<p class="qform__error" data-qform-error hidden role="alert"></p>
+            <div class="qform__preview" data-qform-preview-wrap hidden>
+              <p class="qform__label">Vaše zpráva pro Ditu</p>
+              <pre data-qform-preview></pre>
+            </div>
+            <div class="btn-row">
+              <button class="btn" type="button" data-qform-mail data-subject="{subject}">{ICON["mail"]}<span>Odeslat e-mailem</span></button>
+              <button class="btn btn--ghost qform__sms" type="button" data-qform-sms>{ICON["phone"]}<span>Poslat SMS</span></button>
+              <button class="btn btn--ghost" type="button" data-qform-copy>{ICON["copy"]}<span>Zkopírovat zprávu</span></button>
+            </div>
+            <p class="note">Formulář nic neukládá ani neodesílá. Jen z odpovědí připraví zprávu, kterou sami pošlete e-mailem nebo SMS, případně ji vložíte do zprávy na <a href="{FB}" target="_blank" rel="noopener">Facebooku Depozita</a>. Raději voláte? <a href="tel:{PHONE_TEL}">{PHONE}</a></p>"""
+
+
+ADOPTION_FORM = f"""<form class="qform reveal" id="dotaznik" data-qform="adopce" data-to="{EMAIL}" data-sms="{PHONE_TEL}" novalidate>
+            <h3>Dotazník pro zájemce</h3>
+            <p class="qform__lead">Pár kliknutí místo dlouhého psaní. Na tyhle otázky se Dita stejně zeptá a díky nim vám doporučí kočku, která k vám opravdu sedne.</p>
+            <label class="qf qf--text">O kterou kočičku máte zájem?<input type="text" name="kocka" placeholder="např. Zina, nebo nechám si poradit" autocomplete="off"></label>
+            {chips("bydleni", "Bydlíte", [("v bytě", "V bytě"), ("v domě bez zahrady", "V domě"), ("v domě se zahradou", "V domě se zahradou")])}
+            {chips("ven", "Bude kočka chodit ven?", [("bude jen doma", "Jen doma"), ("bude chodit na zabezpečenou zahradu nebo do výběhu", "Na zabezpečenou zahradu"), ("bude chodit volně ven", "Volně ven")])}
+            {chips("site", "Okna a balkon máte zajištěné sítí?", [("ano", "Ano"), ("zatím ne, pořídíme", "Zatím ne, pořídíme")])}
+            {chips("domacnost", "Kdo s vámi bydlí?", [("děti", "Děti"), ("další kočka", "Další kočka"), ("pes", "Pes"), ("jiná zvířata", "Jiná zvířata")], "checkbox")}
+            <label class="qf qf--text" data-show-if="domacnost=děti" hidden>Kolik je dětem let?<input type="text" name="vek_deti" placeholder="např. 4 a 9 let" autocomplete="off"></label>
+            {chips("zkusenosti", "Zkušenosti s kočkami", [("bude to naše první kočka", "První kočka"), ("kočku jsme už měli", "Už jsme měli"), ("kočku máme i teď", "Máme i teď")])}
+            {chips("sama", "Jak dlouho bude kočka přes den sama?", [("skoro vůbec", "Skoro vůbec"), ("do 4 hodin", "Do 4 hodin"), ("4 až 8 hodin", "4–8 hodin"), ("déle než 8 hodin", "Déle")])}
+            <label class="qf qf--text">Kdo se o kočku postará, když budete pryč?<input type="text" name="dovolena" placeholder="např. rodiče, soused" autocomplete="off"></label>
+            <label class="qf qf--text">Co od kočičky čekáte? <small>(nepovinné)</small><textarea name="ocekavani" rows="2" placeholder="např. mazlivou kočku k dětem, klidnou společnici…"></textarea></label>
+            <fieldset class="qf qf--contact"><legend>Kontakt, ať se vám Dita může ozvat</legend>
+              <label>Jméno<input type="text" name="jmeno" autocomplete="name" required></label>
+              <label>Telefon<input type="tel" name="telefon" autocomplete="tel" inputmode="tel" required></label>
+              <label>Obec<input type="text" name="obec" autocomplete="address-level2"></label>
+            </fieldset>
+            <label class="qf qf--check"><input type="checkbox" name="podminky" value="ano" required><span>Rozumím, že kočky vydáváte na adopční smlouvu a že se u koťat zavazuji ke kastraci v dospělosti.</span></label>
+            {qform_actions("adopce")}
+          </form>"""
+
+FOSTER_FORM = f"""<form class="qform reveal" id="prihlaska" data-qform="docaska" data-to="{EMAIL}" data-sms="{PHONE_TEL}" novalidate>
+            <h3>Přihláška do dočasné péče</h3>
+            <p class="qform__lead">Nezávazně. Dita se vám ozve a domluvíte se, jaká kočička by se k vám hodila.</p>
+            {chips("bydleni", "Bydlíte", [("v bytě", "V bytě"), ("v domě bez zahrady", "V domě"), ("v domě se zahradou", "V domě se zahradou")])}
+            {chips("mistnost", "Máte pro kočku na začátek samostatnou místnost?", [("ano", "Ano"), ("ne", "Ne")])}
+            {chips("zvirata", "Máte doma zvířata?", [("nemám", "Nemám"), ("kočku", "Kočku"), ("psa", "Psa"), ("jiná zvířata", "Jiná")], "checkbox")}
+            {chips("delka", "Na jak dlouho můžete kočku vzít?", [("na pár týdnů", "Pár týdnů"), ("na 1 až 3 měsíce", "1–3 měsíce"), ("dokud nenajde domov", "Dokud nenajde domov")])}
+            {chips("koho", "Koho byste si vzali nejraději?", [("koťata", "Koťata"), ("dospělou kočku", "Dospělou kočku"), ("je mi to jedno", "Je mi to jedno")])}
+            <fieldset class="qf qf--contact"><legend>Kontakt</legend>
+              <label>Jméno<input type="text" name="jmeno" autocomplete="name" required></label>
+              <label>Telefon<input type="tel" name="telefon" autocomplete="tel" inputmode="tel" required></label>
+              <label>Obec<input type="text" name="obec" autocomplete="address-level2"></label>
+            </fieldset>
+            {qform_actions("docaska")}
+          </form>"""
+
+
+
+
 
 
 def image_size(path):
@@ -925,19 +961,7 @@ ADOPCE = f"""
             </ul>
             <p class="reveal">Kočky vydáváme na <strong>adopční smlouvu</strong>, ve které se zavazujete poskytnout kočce stabilní a bezpečný domov. U koťat se zavazujete ke <strong>kastraci v dospělosti</strong>. Prosíme o závazné rozhodnutí; kočička u nás pár dní i týdnů v pořádku vydrží.</p>
           </div>
-          <div class="mailto-box reveal" style="--d:.1s">
-            <h3>Napište nám o sobě</h3>
-            <p>Připravili jsme e-mail s otázkami, na které se Dita stejně zeptá. Stačí doplnit odpovědi a odeslat.</p>
-            <ul class="checklist" style="margin-bottom:1.2rem">
-              <li><span>Kterou kočičku chcete a kde bydlíte</span></li>
-              <li><span>Kdo s vámi bydlí: děti (a jak staré), pes, další kočky</span></li>
-              <li><span>Jaké máte s kočkami zkušenosti a co od kočičky čekáte</span></li>
-            </ul>
-            <div class="btn-row">
-              <a class="btn" href="{adoption_mailto()}">{ICON["mail"]}Napsat e-mail</a>
-              <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
-            </div>
-          </div>
+          {ADOPTION_FORM}
         </div>
       </div>
     </section>
@@ -1061,7 +1085,7 @@ DOCASKA = f"""
         <h1 class="reveal" style="--d:.06s">Dočasná péče: kočka doma <span class="accent-word">bez závazku na celý život</span>.</h1>
         <p class="lead reveal" style="--d:.12s">Každá dočaska znamená, že můžeme vzít z ulice další kočku. Vy dáte kočce domov na přechodnou dobu, my hradíme krmení, stelivo i veterinu.</p>
         <div class="btn-row reveal" style="--d:.18s">
-          <a class="btn" href="{foster_mailto()}">{ICON["mail"]}Chci být dočaska</a>
+          <a class="btn" href="#prihlaska">{ICON["mail"]}Chci být dočaska</a>
           <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
         </div>
       </div>
@@ -1094,7 +1118,7 @@ DOCASKA = f"""
             <h3>Chcete se stát dočaskou?</h3>
             <p>Ozvěte se Ditě. Domluvíte se, jaká kočička by se k vám hodila a co všechno budete potřebovat.</p>
             <div class="btn-row" style="flex-direction:column">
-              <a class="btn" href="{foster_mailto()}">{ICON["mail"]}Napsat e-mail</a>
+              <a class="btn" href="#prihlaska">{ICON["mail"]}Vyplnit přihlášku</a>
               <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
             </div>
           </aside>
@@ -1134,6 +1158,12 @@ DOCASKA = f"""
             <div class="faq__body"><p>Řekněte nám to s předstihem a domluvíme se. Jen prosím ne ze dne na den, viz „Dočaska není půjčovna koček“ výše.</p></div>
           </details>
         </div>
+      </div>
+    </section>
+
+    <section class="section section--tight" aria-label="Přihláška do dočasné péče">
+      <div class="wrap wrap--narrow">
+        {FOSTER_FORM}
       </div>
     </section>
 
@@ -1514,7 +1544,7 @@ SOUKROMI = f"""
           <p>Seznam koček k adopci zobrazujeme pomocí widgetu portálu <a href="https://www.pesweb.cz/" target="_blank" rel="noopener">Pesweb.cz</a>. Widget se načítá z jeho serverů, až když k němu doscrollujete. Pesweb v něm používá ochranu Cloudflare (technická cookie <code>cf_clearance</code>) a načítá i služby Googlu (Tag Manager, reklamní a souhlasové skripty); o případný souhlas s cookies vás požádá sám. Za zpracování údajů ve widgetu odpovídá provozovatel Pesweb.cz. Odkazy na Facebook, Instagram a WhatsApp jsou obyčejné odkazy; data se těmto službám předají, až když na odkaz kliknete.</p>
 
           <h2>Osobní údaje</h2>
-          <p>Web neobsahuje formuláře. Když nám napíšete e-mail nebo zavoláte kvůli adopci, dočasné péči, nálezu kočky nebo potvrzení o daru, použijeme vaše údaje jen k vyřízení vaší žádosti, k uzavření adopční smlouvy a k vystavení potvrzení o daru, a uchováme je jen po dobu nutnou podle zákona.</p>
+          <p>Dotazníky na webu (adopce, dočasná péče) nic neukládají ani nikam neodesílají: jen z vašich odpovědí připraví zprávu, kterou sami pošlete e-mailem nebo SMS. Když nám napíšete nebo zavoláte kvůli adopci, dočasné péči, nálezu kočky nebo potvrzení o daru, použijeme vaše údaje jen k vyřízení vaší žádosti, k uzavření adopční smlouvy a k vystavení potvrzení o daru, a uchováme je jen po dobu nutnou podle zákona.</p>
           <p>Fotky koček od adoptujících zveřejníme jen s jejich souhlasem. Máte právo na přístup ke svým údajům, jejich opravu a výmaz; stačí napsat na <a href="mailto:{EMAIL}">{EMAIL}</a>. Stížnost můžete podat u Úřadu pro ochranu osobních údajů.</p>
         </div>
       </div>

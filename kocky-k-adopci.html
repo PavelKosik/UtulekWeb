@@ -123,19 +123,37 @@
             </ul>
             <p class="reveal">Kočky vydáváme na <strong>adopční smlouvu</strong>, ve které se zavazujete poskytnout kočce stabilní a bezpečný domov. U koťat se zavazujete ke <strong>kastraci v dospělosti</strong>. Prosíme o závazné rozhodnutí; kočička u nás pár dní i týdnů v pořádku vydrží.</p>
           </div>
-          <div class="mailto-box reveal" style="--d:.1s">
-            <h3>Napište nám o sobě</h3>
-            <p>Připravili jsme e-mail s otázkami, na které se Dita stejně zeptá. Stačí doplnit odpovědi a odeslat.</p>
-            <ul class="checklist" style="margin-bottom:1.2rem">
-              <li><span>Kterou kočičku chcete a kde bydlíte</span></li>
-              <li><span>Kdo s vámi bydlí: děti (a jak staré), pes, další kočky</span></li>
-              <li><span>Jaké máte s kočkami zkušenosti a co od kočičky čekáte</span></li>
-            </ul>
-            <div class="btn-row">
-              <a class="btn" href="mailto:ditau@email.cz?subject=Z%C3%A1jem%20o%20adopci&amp;body=Dobr%C3%BD%20den%2C%0A%0Am%C3%A1m%20z%C3%A1jem%20o%20adopci%20ko%C4%8Di%C4%8Dky.%0A%0AO%20kterou%20ko%C4%8Di%C4%8Dku%20jde%3A%20%0ABydl%C3%ADm%20v%20%28byt%20/%20d%C5%AFm%20/%20d%C5%AFm%20se%20zahradou%29%3A%20%0AKdo%20s%20n%C3%A1mi%20bydl%C3%AD%20%28d%C4%9Bti%20a%20jejich%20v%C4%9Bk%2C%20pes%2C%20dal%C5%A1%C3%AD%20ko%C4%8Dky%29%3A%20%0AZku%C5%A1enosti%20s%20ko%C4%8Dkami%3A%20%0ABude%20ko%C4%8Dka%20chodit%20ven%3F%20%0ACo%20od%20ko%C4%8Di%C4%8Dky%20o%C4%8Dek%C3%A1v%C3%A1me%3A%20%0AM%C5%AFj%20telefon%3A%20%0A%0AD%C4%9Bkuji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Napsat e-mail</a>
-              <a class="btn btn--ghost" href="tel:+420607707537"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3.5l2 5-2.5 1.5a11 11 0 0 0 6.5 6.5L16 13.5l5 2V19a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>+420 607 707 537</a>
+          <form class="qform reveal" id="dotaznik" data-qform="adopce" data-to="ditau@email.cz" data-sms="+420607707537" novalidate>
+            <h3>Dotazník pro zájemce</h3>
+            <p class="qform__lead">Pár kliknutí místo dlouhého psaní. Na tyhle otázky se Dita stejně zeptá a díky nim vám doporučí kočku, která k vám opravdu sedne.</p>
+            <label class="qf qf--text">O kterou kočičku máte zájem?<input type="text" name="kocka" placeholder="např. Zina, nebo nechám si poradit" autocomplete="off"></label>
+            <fieldset class="chips qf"><legend>Bydlíte</legend><label><input type="radio" name="bydleni" value="v bytě"><span>V bytě</span></label><label><input type="radio" name="bydleni" value="v domě bez zahrady"><span>V domě</span></label><label><input type="radio" name="bydleni" value="v domě se zahradou"><span>V domě se zahradou</span></label></fieldset>
+            <fieldset class="chips qf"><legend>Bude kočka chodit ven?</legend><label><input type="radio" name="ven" value="bude jen doma"><span>Jen doma</span></label><label><input type="radio" name="ven" value="bude chodit na zabezpečenou zahradu nebo do výběhu"><span>Na zabezpečenou zahradu</span></label><label><input type="radio" name="ven" value="bude chodit volně ven"><span>Volně ven</span></label></fieldset>
+            <fieldset class="chips qf"><legend>Okna a balkon máte zajištěné sítí?</legend><label><input type="radio" name="site" value="ano"><span>Ano</span></label><label><input type="radio" name="site" value="zatím ne, pořídíme"><span>Zatím ne, pořídíme</span></label></fieldset>
+            <fieldset class="chips qf"><legend>Kdo s vámi bydlí?</legend><label><input type="checkbox" name="domacnost" value="děti"><span>Děti</span></label><label><input type="checkbox" name="domacnost" value="další kočka"><span>Další kočka</span></label><label><input type="checkbox" name="domacnost" value="pes"><span>Pes</span></label><label><input type="checkbox" name="domacnost" value="jiná zvířata"><span>Jiná zvířata</span></label></fieldset>
+            <label class="qf qf--text" data-show-if="domacnost=děti" hidden>Kolik je dětem let?<input type="text" name="vek_deti" placeholder="např. 4 a 9 let" autocomplete="off"></label>
+            <fieldset class="chips qf"><legend>Zkušenosti s kočkami</legend><label><input type="radio" name="zkusenosti" value="bude to naše první kočka"><span>První kočka</span></label><label><input type="radio" name="zkusenosti" value="kočku jsme už měli"><span>Už jsme měli</span></label><label><input type="radio" name="zkusenosti" value="kočku máme i teď"><span>Máme i teď</span></label></fieldset>
+            <fieldset class="chips qf"><legend>Jak dlouho bude kočka přes den sama?</legend><label><input type="radio" name="sama" value="skoro vůbec"><span>Skoro vůbec</span></label><label><input type="radio" name="sama" value="do 4 hodin"><span>Do 4 hodin</span></label><label><input type="radio" name="sama" value="4 až 8 hodin"><span>4–8 hodin</span></label><label><input type="radio" name="sama" value="déle než 8 hodin"><span>Déle</span></label></fieldset>
+            <label class="qf qf--text">Kdo se o kočku postará, když budete pryč?<input type="text" name="dovolena" placeholder="např. rodiče, soused" autocomplete="off"></label>
+            <label class="qf qf--text">Co od kočičky čekáte? <small>(nepovinné)</small><textarea name="ocekavani" rows="2" placeholder="např. mazlivou kočku k dětem, klidnou společnici…"></textarea></label>
+            <fieldset class="qf qf--contact"><legend>Kontakt, ať se vám Dita může ozvat</legend>
+              <label>Jméno<input type="text" name="jmeno" autocomplete="name" required></label>
+              <label>Telefon<input type="tel" name="telefon" autocomplete="tel" inputmode="tel" required></label>
+              <label>Obec<input type="text" name="obec" autocomplete="address-level2"></label>
+            </fieldset>
+            <label class="qf qf--check"><input type="checkbox" name="podminky" value="ano" required><span>Rozumím, že kočky vydáváte na adopční smlouvu a že se u koťat zavazuji ke kastraci v dospělosti.</span></label>
+            <p class="qform__error" data-qform-error hidden role="alert"></p>
+            <div class="qform__preview" data-qform-preview-wrap hidden>
+              <p class="qform__label">Vaše zpráva pro Ditu</p>
+              <pre data-qform-preview></pre>
             </div>
-          </div>
+            <div class="btn-row">
+              <button class="btn" type="button" data-qform-mail data-subject="Zájem o adopci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span>Odeslat e-mailem</span></button>
+              <button class="btn btn--ghost qform__sms" type="button" data-qform-sms><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3.5l2 5-2.5 1.5a11 11 0 0 0 6.5 6.5L16 13.5l5 2V19a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg><span>Poslat SMS</span></button>
+              <button class="btn btn--ghost" type="button" data-qform-copy><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Zkopírovat zprávu</span></button>
+            </div>
+            <p class="note">Formulář nic neukládá ani neodesílá. Jen z odpovědí připraví zprávu, kterou sami pošlete e-mailem nebo SMS, případně ji vložíte do zprávy na <a href="https://www.facebook.com/depozitumchlupnechlup" target="_blank" rel="noopener">Facebooku Depozita</a>. Raději voláte? <a href="tel:+420607707537">+420 607 707 537</a></p>
+          </form>
         </div>
       </div>
     </section>
@@ -253,7 +271,7 @@
   </footer>
 
   <nav class="mobile-cta" aria-label="Rychlé odkazy">
-    <a class="btn btn--ghost" href="mailto:ditau@email.cz?subject=Z%C3%A1jem%20o%20adopci&amp;body=Dobr%C3%BD%20den%2C%0A%0Am%C3%A1m%20z%C3%A1jem%20o%20adopci%20ko%C4%8Di%C4%8Dky.%0A%0AO%20kterou%20ko%C4%8Di%C4%8Dku%20jde%3A%20%0ABydl%C3%ADm%20v%20%28byt%20/%20d%C5%AFm%20/%20d%C5%AFm%20se%20zahradou%29%3A%20%0AKdo%20s%20n%C3%A1mi%20bydl%C3%AD%20%28d%C4%9Bti%20a%20jejich%20v%C4%9Bk%2C%20pes%2C%20dal%C5%A1%C3%AD%20ko%C4%8Dky%29%3A%20%0AZku%C5%A1enosti%20s%20ko%C4%8Dkami%3A%20%0ABude%20ko%C4%8Dka%20chodit%20ven%3F%20%0ACo%20od%20ko%C4%8Di%C4%8Dky%20o%C4%8Dek%C3%A1v%C3%A1me%3A%20%0AM%C5%AFj%20telefon%3A%20%0A%0AD%C4%9Bkuji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Napsat Ditě</a>
+    <a class="btn btn--ghost" href="#dotaznik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>Dotazník</a>
     <a class="btn" href="podporte-nas.html#dar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.3-9.6C1.5 7.4 3.8 4 7.3 4c2 0 3.6 1.1 4.7 2.7C13.1 5.1 14.7 4 16.7 4c3.5 0 5.8 3.4 4.6 6.9-1.8 5.2-9.3 9.6-9.3 9.6z"/></svg>Podpořit</a>
   </nav>
 

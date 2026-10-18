@@ -375,6 +375,121 @@
     });
   });
 
+  /* ---------- Dotazníky: z odpovědí sestaví zprávu pro Ditu (web nic neukládá ani neodesílá) ---------- */
+  document.querySelectorAll("[data-qform]").forEach(function (form) {
+    var kind = form.getAttribute("data-qform");
+    var preview = form.querySelector("[data-qform-preview]");
+    var previewWrap = form.querySelector("[data-qform-preview-wrap]");
+    var error = form.querySelector("[data-qform-error]");
+    var field = function (name) { return form.querySelector('[name="' + name + '"]'); };
+    var val = function (name) {
+      var el = form.querySelector('[name="' + name + '"]:checked') || form.querySelector('input:not([type=radio]):not([type=checkbox])[name="' + name + '"], textarea[name="' + name + '"]');
+      return el ? el.value.trim() : "";
+    };
+    var vals = function (name) { return [].slice.call(form.querySelectorAll('[name="' + name + '"]:checked')).map(function (el) { return el.value; }); };
+    var sentence = function (t) { return t.charAt(0).toUpperCase() + t.slice(1); };
+
+    var wanted = new URLSearchParams(location.search).get("kocka");
+    if (wanted && field("kocka")) field("kocka").value = wanted;
+
+    var compose = function () {
+      var L = ["Dobrý den,"];
+      var obec = val("obec"), bydleni = val("bydleni");
+      if (kind === "adopce") {
+        var kocka = val("kocka");
+        L.push(kocka ? "mám zájem o adopci: " + kocka + "." : "mám zájem o adopci kočičky a nechám si poradit, která by se k nám hodila.");
+        L.push("");
+        if (bydleni || obec) L.push("Bydlím " + (bydleni || "") + (obec ? (bydleni ? " (obec " + obec + ")" : "v obci " + obec) : "") + ".");
+        if (val("ven")) L.push("Kočka " + val("ven") + ".");
+        if (val("site")) L.push("Sítě na oknech a balkoně: " + val("site") + ".");
+        var dom = vals("domacnost");
+        if (dom.length) {
+          L.push("Bydlí s námi: " + dom.map(function (d) { return d === "děti" && val("vek_deti") ? "děti (" + val("vek_deti") + ")" : d; }).join(", ") + ".");
+        }
+        if (val("zkusenosti")) L.push(sentence(val("zkusenosti")) + ".");
+        if (val("sama")) L.push(val("sama") === "skoro vůbec" ? "Přes den kočka skoro nebude sama." : "Přes den bude kočka sama " + val("sama") + ".");
+        if (val("dovolena")) L.push("Když budeme pryč, postará se: " + val("dovolena") + ".");
+        if (val("ocekavani")) L.push("Co od kočičky čekáme: " + val("ocekavani"));
+        if (field("podminky") && field("podminky").checked) { L.push(""); L.push("Podmínky adopce (adopční smlouva, kastrace koťat v dospělosti) beru na vědomí."); }
+      } else {
+        L.push("zajímá mě dočasná péče o kočičku.");
+        L.push("");
+        if (bydleni || obec) L.push("Bydlím " + (bydleni || "") + (obec ? (bydleni ? " (obec " + obec + ")" : "v obci " + obec) : "") + ".");
+        if (val("mistnost")) L.push(val("mistnost") === "ano" ? "Samostatnou místnost pro kočku mám." : "Samostatnou místnost pro kočku nemám.");
+        var zv = vals("zvirata");
+        if (zv.length) L.push(zv.indexOf("nemám") !== -1 ? "Doma žádná zvířata nemám." : "Doma mám: " + zv.join(", ") + ".");
+        var delka = val("delka");
+        if (delka) L.push(delka === "dokud nenajde domov" ? "Kočku si můžu nechat, dokud nenajde domov." : "Kočku si můžu vzít " + delka + ".");
+        var koho = val("koho");
+        if (koho) L.push(koho === "je mi to jedno" ? "Je mi jedno, jestli koťata, nebo dospělou kočku." : "Nejraději " + koho + ".");
+      }
+      L.push("");
+      if (val("jmeno")) L.push(val("jmeno"));
+      if (val("telefon")) L.push("Tel.: " + val("telefon"));
+      return L.join("\n");
+    };
+
+    var refresh = function () {
+      form.querySelectorAll("[data-show-if]").forEach(function (el) {
+        var parts = el.getAttribute("data-show-if").split("=");
+        el.hidden = vals(parts[0]).indexOf(parts[1]) === -1;
+      });
+      // „nemám“ zvířata vylučuje ostatní volby
+      var none = form.querySelector('[name="zvirata"][value="nemám"]');
+      if (none && none.checked) form.querySelectorAll('[name="zvirata"]:not([value="nemám"])').forEach(function (el) { el.checked = false; });
+      var answered = [].slice.call(form.elements).some(function (el) { return (el.type === "radio" || el.type === "checkbox") ? el.checked : el.value && el.value.trim(); });
+      if (previewWrap) previewWrap.hidden = !answered;
+      if (preview) preview.textContent = compose();
+    };
+    form.addEventListener("input", refresh);
+    form.addEventListener("change", function (e) {
+      if (e.target.name === "zvirata" && e.target.value !== "nemám" && e.target.checked) {
+        var none = form.querySelector('[name="zvirata"][value="nemám"]');
+        if (none) none.checked = false;
+      }
+      refresh();
+    });
+    refresh();
+
+    var validate = function () {
+      var missing = [];
+      ["jmeno", "telefon"].forEach(function (n) { var el = field(n); if (el && !el.value.trim()) missing.push(el); });
+      var cond = field("podminky");
+      if (cond && !cond.checked) missing.push(cond);
+      form.querySelectorAll("[aria-invalid]").forEach(function (el) { el.removeAttribute("aria-invalid"); });
+      if (!missing.length) { if (error) error.hidden = true; return true; }
+      missing.forEach(function (el) { el.setAttribute("aria-invalid", "true"); });
+      if (error) {
+        var needContact = missing.some(function (el) { return el.name !== "podminky"; });
+        error.textContent = (needContact ? "Doplňte prosím jméno a telefon, ať se vám Dita může ozvat. " : "") + (cond && !cond.checked ? "Potvrďte prosím podmínky adopce." : "");
+        error.hidden = false;
+      }
+      missing[0].focus();
+      return false;
+    };
+
+    var mailBtn = form.querySelector("[data-qform-mail]");
+    if (mailBtn) mailBtn.addEventListener("click", function () {
+      if (!validate()) return;
+      var subject = mailBtn.getAttribute("data-subject") + (val("kocka") ? " – " + val("kocka") : "");
+      location.href = "mailto:" + form.getAttribute("data-to") + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(compose().replace(/\n/g, "\r\n"));
+    });
+    var smsBtn = form.querySelector("[data-qform-sms]");
+    if (smsBtn) smsBtn.addEventListener("click", function () {
+      if (!validate()) return;
+      location.href = "sms:" + form.getAttribute("data-sms") + "?&body=" + encodeURIComponent(compose());
+    });
+    var copyBtn = form.querySelector("[data-qform-copy]");
+    if (copyBtn) copyBtn.addEventListener("click", function () {
+      if (!validate()) return;
+      var text = compose();
+      var label = copyBtn.querySelector("span");
+      var done = function () { copyBtn.classList.add("copy-done"); label.textContent = "Zkopírováno"; setTimeout(function () { copyBtn.classList.remove("copy-done"); label.textContent = "Zkopírovat zprávu"; }, 2200); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { window.prompt("Zkopírujte zprávu:", text); });
+      else window.prompt("Zkopírujte zprávu:", text);
+    });
+  });
+
   /* ---------- Spodní lišta na mobilu: ukáže se mimo úvod, patičku a sekci daru ---------- */
   var cta = document.querySelector(".mobile-cta");
   if (cta && "IntersectionObserver" in window) {

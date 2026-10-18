@@ -65,12 +65,13 @@ async function scrollThrough(p) {
     const info = { console: [], failed: [], bytes: 0, requests: 0, thirdParty: new Set() };
     p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') info.console.push(`${m.type()}: ${m.text().slice(0, 200)}`); });
     p.on('pageerror', e => info.console.push('pageerror: ' + e.message));
-    p.on('requestfailed', r => { if (!/cdn-cgi|google-analytics|doubleclick/.test(r.url())) info.failed.push(`${r.failure()?.errorText} ${r.url()}`); });
+    const ours = u => u.startsWith(BASE) || /pesweb\.cz\/widget/.test(u);
+    p.on('requestfailed', r => { if (ours(r.url())) info.failed.push(`${r.failure()?.errorText} ${r.url()}`); });
     p.on('response', async r => {
       info.requests++;
       const u = new URL(r.url());
       if (!r.url().startsWith(BASE)) info.thirdParty.add(u.host);
-      if (r.status() >= 400 && !/cdn-cgi/.test(r.url())) info.failed.push(`HTTP ${r.status()} ${r.url()}`);
+      if (r.status() >= 400 && ours(r.url())) info.failed.push(`HTTP ${r.status()} ${r.url()}`);
       if (r.url().startsWith(BASE)) { try { const b = await r.body(); info.bytes += b.length; } catch (e) {} }
     });
     const t0 = Date.now();
@@ -137,7 +138,7 @@ async function scrollThrough(p) {
     report.links.push(`${st} ${link}`);
     if (st !== 200) problem('links', `${st} ${link}`);
     if (hash) {
-      const pg = noHash.replace(BASE, '') || 'index.html';
+      const pg = noHash.replace(BASE, '').split('?')[0] || 'index.html';
       const ids = report.pages[pg]?.allIds || [];
       if (!ids.includes(decodeURIComponent(hash))) problem('anchors', `#${hash} missing on ${pg}`);
     }
@@ -194,7 +195,7 @@ async function scrollThrough(p) {
     await p.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })); await p.waitForTimeout(600);
     check('mobile CTA hidden at footer', await p.evaluate(() => !document.querySelector('.mobile-cta').classList.contains('is-visible')));
     await p.goto(BASE + 'kocky-k-adopci.html', { waitUntil: 'networkidle' });
-    check('mobile CTA on adoption page offers e-mail', await p.evaluate(() => document.querySelector('.mobile-cta a').href.startsWith('mailto:')));
+    check('mobile CTA on adoption page opens questionnaire', await p.evaluate(() => document.querySelector('.mobile-cta a').getAttribute('href') === '#dotaznik' && !!document.querySelector('#dotaznik')));
     await ctx.close();
   }
   {
@@ -291,6 +292,34 @@ async function scrollThrough(p) {
     await p.getByText('Kočky i kocouři', { exact: true }).click();
     await p.waitForTimeout(1500);
     check('resetting filters clears URL', !p.url().includes('?'), p.url().split('/').pop());
+    await ctx.close();
+  }
+  {
+    // dotazníky: předvyplnění, povinná pole, složení zprávy
+    const ctx = await newCtx(browser, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(BASE).origin });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'kocky-k-adopci.html?kocka=Zina#dotaznik', { waitUntil: 'load' });
+    const f = p.locator('#dotaznik');
+    check('questionnaire prefills cat from URL', (await f.locator('[name=kocka]').inputValue()) === 'Zina');
+    await f.locator('[data-qform-copy]').click();
+    check('questionnaire asks for contact and conditions', await f.locator('[data-qform-error]').isVisible());
+    await f.getByText('V bytě', { exact: true }).click();
+    await f.getByText('Děti', { exact: true }).click();
+    check('children age field appears', await f.locator('[name=vek_deti]').isVisible());
+    await f.locator('[name=vek_deti]').fill('5 let');
+    await f.locator('[name=jmeno]').fill('Test');
+    await f.locator('[name=telefon]').fill('777 000 000');
+    await f.locator('[name=podminky]').check();
+    await f.locator('[data-qform-copy]').click();
+    const msg = await p.evaluate(() => navigator.clipboard.readText()).catch(() => '');
+    check('questionnaire composes message', /Zina/.test(msg) && /v bytě/.test(msg) && /děti \(5 let\)/.test(msg) && /Tel\.: 777 000 000/.test(msg) && !(await f.locator('[data-qform-error]').isVisible()), msg.split('\n').slice(0, 2).join(' / '));
+    check('SMS option on touch devices', await f.locator('[data-qform-sms]').isVisible());
+    await p.goto(BASE + 'docasna-pece.html#prihlaska', { waitUntil: 'load' });
+    const g = p.locator('#prihlaska');
+    await g.getByText('Kočku', { exact: true }).click();
+    await g.getByText('Nemám', { exact: true }).click();
+    check('foster form: "Nemám" clears other animals', !(await g.locator('[name=zvirata][value="kočku"]').isChecked()) && /žádná zvířata/.test(await g.locator('[data-qform-preview]').innerText()));
     await ctx.close();
   }
   {
