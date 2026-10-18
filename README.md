@@ -54,7 +54,15 @@ Widget Pesweb se na `localhost` načte jen s nastaveným `baseUrl`, což skript 
 
 ## Nasazení na GitHub Pages
 
-Settings → Pages → Source: *Deploy from a branch* → větev `main`, složka `/ (root)`. Soubor `.nojekyll` už v repozitáři je.
+Web běží na **https://pavelkosik.github.io/UtulekWeb/** a publikuje se z větve `gh-pages` (Settings → Pages → *Deploy from a branch* → `gh-pages`, `/ (root)`). Soubor `.nojekyll` už v repozitáři je.
+
+Novou verzi zveřejníte tak, že ji pushnete do `gh-pages`, například:
+
+```sh
+git push origin HEAD:gh-pages
+```
+
+Po pár desítkách vteřin se změna objeví na webu.
 
 ## Fotky
 
