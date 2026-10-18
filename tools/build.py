@@ -6,6 +6,7 @@ Texty, kontakty a čísla se mění tady v souboru, HTML se pak vygeneruje znovu
 QR kódy se přegenerují jen tehdy, když je nainstalovaný balíček `qrcode`
 (pip install qrcode); jinak se použijí ty, které už jsou v assets/img.
 """
+import hashlib
 import json
 import pathlib
 import re
@@ -146,6 +147,9 @@ NAV = [
 ]
 
 # Písma jsou hostovaná lokálně (assets/fonts), aby web neposílal IP adresy návštěvníků Googlu.
+# Otisk stylů a skriptu do adresy (?v=…): GitHub Pages nechá prohlížeč držet soubory 10 minut,
+# takže bez toho by se změna stylů projevila až po vynuceném obnovení stránky (Ctrl+F5).
+ASSET_V = hashlib.sha1((OUT / "assets/css/style.css").read_bytes() + (OUT / "assets/js/main.js").read_bytes()).hexdigest()[:10]
 FONT_FACES = (OUT / "assets/fonts/fonts.css").read_text(encoding="utf-8").replace("url(", "url(assets/fonts/")
 FONT_FACES = re.sub(r"/\*.*?\*/\s*", "", FONT_FACES, flags=re.S)
 FONT_FACES = re.sub(r"\s*\n\s*", "", FONT_FACES)
@@ -229,7 +233,7 @@ def head(title, desc, current, extra_head=""):
   <link rel="manifest" href="manifest.webmanifest">
   {HEAD_SCRIPT}
   {FONTS}
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/style.css?v={ASSET_V}">
   {SPECULATION}{extra_head}
 </head>
 <body>
@@ -319,7 +323,7 @@ def footer(current=""):
     <a class="btn" href="podporte-nas.html#dar">{ICON["heart"]}Podpořit</a>
   </nav>
 
-  <script src="assets/js/main.js"></script>
+  <script src="assets/js/main.js?v={ASSET_V}"></script>
 </body>
 </html>
 """
@@ -472,7 +476,7 @@ def appeal_block():
         return ""
     a = APPEAL
     return f"""
-    <section class="section--tight" style="padding-top:0;padding-bottom:clamp(40px,6vw,72px)" aria-labelledby="vyzva-nadpis">
+    <section class="section--tight" style="padding-top:0;padding-bottom:clamp(2.5rem,6vw,4.5rem)" aria-labelledby="vyzva-nadpis">
       <div class="wrap">
         <div class="appeal reveal">
           <div class="appeal__media"><img src="{a["image"]}" alt="{a["name"]}" loading="lazy" sizes="(max-width: 560px) 92vw, 220px"></div>
@@ -604,6 +608,9 @@ def picture(match):
         return tag
     sizes = re.search(r'sizes="([^"]+)"', tag)
     sizes = sizes.group(1) if sizes else "(max-width: 860px) 92vw, 540px"
+    last = re.search(r"(\d+)px\s*$", sizes)  # nad 1600 px se web zvětšuje s oknem (1rem = 1vw), obrázky taky
+    if last:
+        sizes = sizes[:last.start(1)] + f"(min-width: 1601px) {int(last.group(1)) / 16:g}vw, " + sizes[last.start(1):]
     tag = re.sub(r'\s*sizes="[^"]+"', "", tag)
     return f'<picture><source type="image/webp" srcset="{", ".join(variants)}" sizes="{sizes}">{tag}</picture>'
 
@@ -678,7 +685,7 @@ INDEX = f"""
     </section>
 {appeal_block()}
 
-    <section class="section section--tight" id="kocky" aria-labelledby="adopce-nadpis" style="padding-top:clamp(24px,4vw,48px)">
+    <section class="section section--tight" id="kocky" aria-labelledby="adopce-nadpis" style="padding-top:clamp(1.5rem,4vw,3rem)">
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">Hledají domov</p>
@@ -697,7 +704,7 @@ INDEX = f"""
           <p class="tab-intro">Nejnovější přírůstky, které už prošly karanténou a hledají domov. Na jaře a v létě jsou to hlavně koťata.</p>
           {widget({"sort": "createdAt:desc"}, {"itemsPerPage": 6}, reveal=False)}
         </div>
-        <div class="btn-row" style="margin-top:28px">
+        <div class="btn-row" style="margin-top:1.75rem">
           <a class="btn" href="kocky-k-adopci.html">Všech {LISTED} inzerátů a jak adopce probíhá{ICON["arrow"]}</a>
         </div>
       </div>
@@ -713,7 +720,7 @@ INDEX = f"""
           <div class="stat reveal" style="--d:.16s"><div class="stat__num" data-count="20">20</div><div class="stat__label">míst v depozitu, rozdělených podle místa nálezu</div></div>
           <div class="stat reveal" style="--d:.24s"><div class="stat__num" data-count="1900">1 900</div><div class="stat__label">Kč stojí jeden den provozu: krmivo, veterina, stelivo</div></div>
         </div>
-        <p class="note" style="margin-top:16px">Čísla z Pesweb.cz a z transparentního účtu, {STATS_DATE}.</p>
+        <p class="note" style="margin-top:1rem">Čísla z Pesweb.cz a z transparentního účtu, {STATS_DATE}.</p>
       </div>
     </section>
 
@@ -818,7 +825,7 @@ INDEX = f"""
 
     <section class="section" aria-labelledby="domov-nadpis">
       <div class="wrap">
-        <div class="split" style="margin-bottom:clamp(32px,5vw,56px)">
+        <div class="split" style="margin-bottom:clamp(2rem,5vw,3.5rem)">
           <div>
             <p class="eyebrow">Domov našli</p>
             <div class="big-number reveal" data-count="{ADOPTED}">{ADOPTED}</div>
@@ -1172,7 +1179,7 @@ DOCASKA = f"""
         <p class="eyebrow" style="justify-content:center">Znáte někoho, kdo by mohl být dočaska?</p>
         <h2 class="reveal">Nejvíc dočaskářů přivedou jejich známí.</h2>
         <p class="lead reveal" style="margin-inline:auto;max-width:52ch">Pošlete tuhle stránku kamarádce, která miluje kočky, ale na celý život si ji vzít nemůže.</p>
-        <div class="reveal" style="display:flex;justify-content:center;margin-top:20px">{share("Dočasná péče o kočky z Depozita chlup-nechlup. Náklady hradí depozitum, ty dáš kočce domov na přechodnou dobu.")}</div>
+        <div class="reveal" style="display:flex;justify-content:center;margin-top:1.25rem">{share("Dočasná péče o kočky z Depozita chlup-nechlup. Náklady hradí depozitum, ty dáš kočce domov na přechodnou dobu.")}</div>
       </div>
     </section>
 
@@ -1254,7 +1261,7 @@ PODPORA = f"""
           <a class="btn" href="mailto:{EMAIL}?subject=V%C4%9Bcn%C3%BD%20dar">{ICON["mail"]}Domluvit věcný dar</a>
           <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
         </div>
-        <p class="note" style="margin-top:14px">Seznam aktualizován: {WISHLIST_DATE}.</p>
+        <p class="note" style="margin-top:0.875rem">Seznam aktualizován: {WISHLIST_DATE}.</p>
       </div>
     </section>
 
@@ -1274,7 +1281,7 @@ PODPORA = f"""
           <div class="quote-card reveal" style="--d:.08s">
             <h3>Plakát „Hledáme domov“</h3>
             <p style="color:var(--muted)">A4 s QR kódem, který vede přímo na naše kočky na Peswebu. Stačí vytisknout.</p>
-            <div class="btn-row" style="margin-bottom:24px">
+            <div class="btn-row" style="margin-bottom:1.5rem">
               <a class="btn" href="plakat.html">{ICON["print"]}Otevřít plakát</a>
             </div>
             {share("Depozitum chlup-nechlup ze Strakonic hledá domovy pro kočky z ulice. Podívej se, kdo čeká:", "index.html")}
@@ -1289,7 +1296,7 @@ PODPORA = f"""
           <p class="eyebrow">Další možnosti</p>
           <h2 class="reveal">Pomoct se dá i jinak</h2>
         </div>
-        <div class="help-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        <div class="help-grid" style="grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))">
           <a class="help-card reveal" href="kocky-k-adopci.html">
             <div class="help-card__icon">{ICON["home"]}</div>
             <h3>Adopce</h3>

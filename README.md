@@ -48,6 +48,12 @@ QR kódy pro platbu s částkou (`assets/img/qr-platba-*.svg`) se přegenerují,
 - `python3 tools/optimize_images.py` vytvoří k fotkám zmenšené WebP verze (400 a 800 px). `tools/build.py` je sám použije v `<picture>`, starší prohlížeče dostanou JPG. Spusťte po přidání nebo výměně fotky (potřebuje Pillow).
 - `node tools/og_images.js` vygeneruje náhledové obrázky pro sdílení na Facebooku a WhatsAppu (`assets/img/og/`, 1200×630) a ikony webu. Potřebuje Playwright.
 
+## Velké obrazovky
+
+Všechny rozměry ve stylech jsou v `rem`. Do šířky okna 1600 px je `1rem` = výchozí písmo prohlížeče (16 px), nad 1600 px platí `1rem = 1vw` (nejvýš 2×). Na velkém monitoru tak web vypadá stejně jako na notebooku, jen úměrně větší. Nové rozměry proto pište v `rem` (16 px = 1rem), jinak se na velkých obrazovkách nezvětší.
+
+Styly a skript mají v adrese otisk obsahu (`style.css?v=…`), který `tools/build.py` přepočítá při každém sestavení. Prohlížeč si tak po změně stáhne novou verzi a nemusí se obnovovat přes Ctrl+F5.
+
 ## Testování
 
 ```sh
@@ -64,6 +70,7 @@ Test projde všech 9 stránek a zkontroluje:
 - interakce: mobilní menu, záložky, volbu částky a QR, kopírování, sdílení, počítadla, „Cestu kočky“, mobilní lištu,
 - režim bez animací a bez JavaScriptu,
 - úvod na obrazovkách od 720 do 1472 px výšky: tlačítka vidět bez scrollování, žádná obří mezera,
+- velký monitor (2560 px): web se úměrně zvětší a vyplní šířku,
 - že web zůstane světlý i při tmavém režimu v systému,
 - přístupnost (axe-core).
 

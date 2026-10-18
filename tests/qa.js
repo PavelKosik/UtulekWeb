@@ -63,9 +63,10 @@ async function scrollThrough(p) {
     const ctx = await newCtx(browser, { viewport: { width: 1440, height: 900 } });
     const p = await ctx.newPage();
     const info = { console: [], failed: [], bytes: 0, requests: 0, thirdParty: new Set() };
-    p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') info.console.push(`${m.type()}: ${m.text().slice(0, 200)}`); });
-    p.on('pageerror', e => info.console.push('pageerror: ' + e.message));
     const ours = u => u.startsWith(BASE) || /pesweb\.cz\/widget/.test(u);
+    // chyby z cizích skriptů uvnitř widgetu (reklamy, analytika Peswebu) nejsou chyby webu
+    p.on('console', m => { const at = m.location().url || ''; if ((m.type() === 'error' || m.type() === 'warning') && (!at || ours(at))) info.console.push(`${m.type()}: ${m.text().slice(0, 200)} ${at}`); });
+    p.on('pageerror', e => info.console.push('pageerror: ' + e.message));
     p.on('requestfailed', r => { if (ours(r.url())) info.failed.push(`${r.failure()?.errorText} ${r.url()}`); });
     p.on('response', async r => {
       info.requests++;
@@ -364,7 +365,17 @@ async function scrollThrough(p) {
     await ctx.close();
   }
 
-  // 7) axe-core
+  // 7) velký monitor (2560 px): web se úměrně zvětší (1rem = 1vw) a vyplní šířku, nic nepřetéká
+  {
+    const ctx = await newCtx(browser, { viewport: { width: 2560, height: 1430 }, reducedMotion: 'reduce' });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'index.html', { waitUntil: 'load' });
+    const m = await p.evaluate(() => ({ root: getComputedStyle(document.documentElement).fontSize, wrap: Math.round(document.querySelector('.hero .wrap').getBoundingClientRect().width), overflow: document.documentElement.scrollWidth - innerWidth, cue: getComputedStyle(document.querySelector('.scroll-cue')).display }));
+    check('2560×1430: page scales up to fill the screen', m.root === '25.6px' && m.wrap > 2560 * 0.65 && m.overflow <= 0 && m.cue === 'none', JSON.stringify(m));
+    await ctx.close();
+  }
+
+  // 8) axe-core
   for (const scheme of ['light']) {
     for (const pg of PAGES) {
       const ctx = await newCtx(browser, { viewport: { width: 1280, height: 900 }, colorScheme: scheme, reducedMotion: 'reduce' });
