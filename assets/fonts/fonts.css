@@ -1,4 +1,5 @@
-/* Písma Fraunces (optická velikost 72, SOFT 100) a Figtree, licence SIL Open Font License; hostovaná lokálně kvůli GDPR */
+/* Písma Fraunces (optická velikost 72, SOFT 100) a Figtree, licence SIL Open Font License; hostovaná lokálně kvůli GDPR.
+   Ve fraunces-normal-latin.woff2 je klidnější malé „j“ (tools/fraunces_j.py). */
 /* Figtree normal latin-ext */
 @font-face {
   font-family: 'Figtree';
