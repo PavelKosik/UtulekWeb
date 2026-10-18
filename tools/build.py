@@ -136,6 +136,7 @@ ICON = {
     "download": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>',
     "check": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     "down": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+    "camera": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
 }
 PAW_PATHS = ICON["paw"][ICON["paw"].index(">") + 1:-6]
 
@@ -1383,6 +1384,12 @@ PODPORA = f"""
             <h3>Hlaste nálezy obci</h3>
             <p>Každá nahlášená kočka tlačí obce k tomu, aby problém s kočkami začaly řešit.</p>
             <span class="help-card__more">Jak postupovat{ICON["arrow"]}</span>
+          </a>
+          <a class="help-card reveal" style="--d:.24s" href="mailto:{EMAIL}?subject=Chci%20pom%C3%A1hat%20s%20focen%C3%ADm%20a%20sd%C3%ADlen%C3%ADm">
+            <div class="help-card__icon">{ICON["camera"]}</div>
+            <h3>Focení a sdílení</h3>
+            <p>Dita uvítá pomoc s focením koček a se správou Facebooku. Dobrá fotka pomůže kočce k domovu nejvíc.</p>
+            <span class="help-card__more">Nabídnout pomoc{ICON["arrow"]}</span>
           </a>
         </div>
       </div>

@@ -109,6 +109,7 @@
 
   /* ---------- Hlavní scroll smyčka ---------- */
   var header = document.querySelector(".site-header");
+  var progressBar = document.querySelector(".progress");
   var heroes = document.querySelectorAll(".hero, .page-hero");
   var parallax = [].slice.call(document.querySelectorAll("[data-progress]"));
   var marquees = [].slice.call(document.querySelectorAll("[data-marquee]"));
@@ -135,7 +136,8 @@
     }
 
     // 2) Zápisy
-    root.style.setProperty("--page-progress", docH > 0 ? clamp(y / docH).toFixed(4) : 0);
+    // Proměnná jen na proužku: změna na <html> by při každém posunu přepočítala styly celé stránky.
+    if (progressBar) progressBar.style.setProperty("--page-progress", docH > 0 ? clamp(y / docH).toFixed(4) : 0);
     if (header) {
       header.classList.toggle("is-scrolled", y > 12);
       header.classList.toggle("is-hidden", y > lastY && y > 420 && !navOpen);
