@@ -238,6 +238,51 @@
     widgets.forEach(initWidget);
   }
 
+  /* ---------- Filtry koček (věk, pohlaví, řazení) — přenačtou widget, stav je v adrese ---------- */
+  var filterForm = document.querySelector("[data-cat-filters]");
+  var filterWidget = filterForm && document.querySelector("[data-pesweb]");
+  if (filterForm && filterWidget) {
+    var note = document.querySelector("[data-filter-note]");
+    var params = new URLSearchParams(location.search);
+    ["vek", "pohlavi", "razeni"].forEach(function (name) {
+      var wanted = params.get(name);
+      if (!wanted) return;
+      var input = filterForm.querySelector('input[name="' + name + '"][value="' + wanted + '"]');
+      if (input) input.checked = true;
+    });
+    var applyFilters = function (push) {
+      var cfg = JSON.parse(filterWidget.getAttribute("data-pesweb"));
+      var get = function (name) { return filterForm.querySelector('input[name="' + name + '"]:checked'); };
+      var vek = get("vek"), pohlavi = get("pohlavi"), razeni = get("razeni");
+      cfg.filters = { shelter: cfg.filters.shelter, sort: razeni.getAttribute("data-api") };
+      if (vek.value) cfg.filters.age = vek.getAttribute("data-api");
+      if (pohlavi.value) cfg.filters.sex = pohlavi.getAttribute("data-api");
+      filterWidget.setAttribute("data-pesweb", JSON.stringify(cfg));
+      if (note) note.hidden = !(razeni.value === "nejdele" || vek.value === "seniori" || vek.value === "dospele");
+      if (push) {
+        var q = new URLSearchParams();
+        if (vek.value) q.set("vek", vek.value);
+        if (pohlavi.value) q.set("pohlavi", pohlavi.value);
+        if (razeni.value) q.set("razeni", razeni.value);
+        history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+      }
+      filterWidget._ready = false;
+      initWidget(filterWidget);
+    };
+    if (location.search) applyFilters(false);
+    filterForm.addEventListener("change", function () { applyFilters(true); });
+
+    // Když filtru nic neodpovídá, widget hlásí malou výšku a píše „nemáme žádné kočky“; doplníme vysvětlení.
+    var empty = document.querySelector("[data-filter-empty]");
+    window.addEventListener("message", function (e) {
+      if (!empty || e.origin !== "https://www.pesweb.cz" || !e.data || e.data.type !== "pesweb-widget-height") return;
+      var frame = filterWidget.querySelector("iframe");
+      if (!frame || e.source !== frame.contentWindow) return;
+      var filtered = filterForm.querySelector('input[name="vek"]:checked').value || filterForm.querySelector('input[name="pohlavi"]:checked').value;
+      empty.hidden = !(filtered && e.data.height <= 410); // prázdný widget má výšku 400 px
+    });
+  }
+
   /* ---------- Záložky ---------- */
   document.querySelectorAll("[role='tablist']").forEach(function (list) {
     var tabs = [].slice.call(list.querySelectorAll("[role='tab']"));

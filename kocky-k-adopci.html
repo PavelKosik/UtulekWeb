@@ -78,27 +78,34 @@
 
     <section class="section section--tight" style="padding-top:0" aria-label="Kočky k adopci">
       <div class="wrap">
-        <div class="tabs" role="tablist" aria-label="Řazení koček">
-          <button type="button" role="tab" id="tab-vse" aria-controls="panel-vse" aria-selected="true">Nejnovější</button>
-          <button type="button" role="tab" id="tab-dlouho" aria-controls="panel-dlouho" aria-selected="false" tabindex="-1">Čekají nejdéle</button>
-        </div>
-        <div class="tab-panel" id="panel-vse" role="tabpanel" tabindex="0" aria-labelledby="tab-vse">
-          <div class="widget-shell">
+        <form class="cat-filters" data-cat-filters aria-label="Výběr koček" onsubmit="return false">
+          <fieldset class="chips">
+            <legend>Věk</legend>
+            <label><input type="radio" name="vek" value="" checked><span>Všechny</span></label>
+            <label><input type="radio" name="vek" value="kotata" data-api="0m-12m"><span>Koťata do 1 roku</span></label>
+            <label><input type="radio" name="vek" value="dospele" data-api="1y-8y"><span>Dospělé 1–8 let</span></label>
+            <label><input type="radio" name="vek" value="seniori" data-api="8y"><span>Senioři 8+</span></label>
+          </fieldset>
+          <fieldset class="chips">
+            <legend>Pohlaví</legend>
+            <label><input type="radio" name="pohlavi" value="" checked><span>Kočky i kocouři</span></label>
+            <label><input type="radio" name="pohlavi" value="kocka" data-api="kocka"><span>Kočky</span></label>
+            <label><input type="radio" name="pohlavi" value="kocour" data-api="kocour"><span>Kocouři</span></label>
+          </fieldset>
+          <fieldset class="chips">
+            <legend>Řazení</legend>
+            <label><input type="radio" name="razeni" value="" data-api="createdAt:desc" checked><span>Nejnovější</span></label>
+            <label><input type="radio" name="razeni" value="nejdele" data-api="foundDate:asc"><span>Čekají nejdéle</span></label>
+          </fieldset>
+        </form>
+        <p class="tab-intro" data-filter-note hidden>Starší a dospělé kočky čekají nejdéle. Přitom bývají klidnější a víte přesně, jakou povahu si domů berete.</p>
+        <p class="filter-empty" data-filter-empty hidden role="status">Tomuhle výběru teď žádná kočka neodpovídá. Zkuste jiný filtr, nebo <a href="tel:+420607707537">zavolejte Ditě</a>, ráda poradí, která by se k vám hodila.</p>
+        <div class="widget-shell">
           <div data-pesweb='{"baseUrl": "https://www.pesweb.cz", "type": "cat", "filters": {"shelter": "depozitum-chlup-nechlup", "sort": "createdAt:desc"}, "height": "auto", "theme": {"primaryColor": "#d4612a", "backgroundColor": "#fffaf2", "textColor": "#2b211b", "borderRadius": "16px"}}'>
             <p class="widget-fallback">Načítáme kočičky… Pokud se seznam nezobrazí, najdete je přímo na <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Pesweb.cz</a>.</p>
           </div>
         </div>
         <p class="widget-note">Seznam se nenačetl? <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Otevřete naše kočky na Pesweb.cz</a></p>
-        </div>
-        <div class="tab-panel" id="panel-dlouho" role="tabpanel" tabindex="0" aria-labelledby="tab-dlouho" hidden>
-          <p class="tab-intro">Dospělé, plaché a starší kočky čekají nejdéle. Přitom bývají klidnější a víte přesně, jakou povahu si domů berete.</p>
-          <div class="widget-shell">
-          <div data-pesweb='{"baseUrl": "https://www.pesweb.cz", "type": "cat", "filters": {"shelter": "depozitum-chlup-nechlup", "sort": "foundDate:asc"}, "height": "auto", "theme": {"primaryColor": "#d4612a", "backgroundColor": "#fffaf2", "textColor": "#2b211b", "borderRadius": "16px"}}'>
-            <p class="widget-fallback">Načítáme kočičky… Pokud se seznam nezobrazí, najdete je přímo na <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Pesweb.cz</a>.</p>
-          </div>
-        </div>
-        <p class="widget-note">Seznam se nenačetl? <a href="https://www.pesweb.cz/cz/depozitum-chlup-nechlup" target="_blank" rel="noopener">Otevřete naše kočky na Pesweb.cz</a></p>
-        </div>
       </div>
     </section>
 

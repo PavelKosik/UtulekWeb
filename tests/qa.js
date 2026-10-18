@@ -273,6 +273,27 @@ async function scrollThrough(p) {
     await ctx.close();
   }
   {
+    // filtry na stránce Kočky k adopci (věk, pohlaví, řazení) a přímé odkazy
+    const ctx = await newCtx(browser, { viewport: { width: 1280, height: 900 } });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'kocky-k-adopci.html?vek=seniori', { waitUntil: 'networkidle' });
+    await p.waitForTimeout(5000);
+    const src = await p.evaluate(() => document.querySelector('[data-pesweb] iframe')?.src || '');
+    const checked = await p.evaluate(() => document.querySelector('input[name=vek]:checked').value);
+    check('adoption filter deep link (?vek=seniori)', /age=8y/.test(src) && checked === 'seniori', checked);
+    await p.getByText('Kocouři', { exact: true }).click();
+    await p.waitForTimeout(5000);
+    const src2 = await p.evaluate(() => document.querySelector('[data-pesweb] iframe')?.src || '');
+    check('filter change reloads widget and updates URL', /sex=kocour/.test(src2) && /age=8y/.test(src2) && /pohlavi=kocour/.test(p.url()), p.url().split('/').pop());
+    const st = await p.evaluate(() => ({ h: document.querySelector('[data-pesweb] iframe').offsetHeight, hint: !document.querySelector('[data-filter-empty]').hidden }));
+    check('empty-result hint matches widget state', (st.h <= 410) === st.hint, JSON.stringify(st));
+    await p.getByText('Všechny', { exact: true }).click();
+    await p.getByText('Kočky i kocouři', { exact: true }).click();
+    await p.waitForTimeout(1500);
+    check('resetting filters clears URL', !p.url().includes('?'), p.url().split('/').pop());
+    await ctx.close();
+  }
+  {
     const ctx = await newCtx(browser, { viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
     const p = await ctx.newPage();
     await p.goto(BASE + 'index.html', { waitUntil: 'networkidle' });
