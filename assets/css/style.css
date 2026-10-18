@@ -33,44 +33,11 @@
 
   --radius: 22px;
   --radius-lg: 36px;
-  --wrap: 1180px;
+  --wrap: clamp(1180px, 70vw, 1320px); /* na velkých monitorech (od ~1700 px) o kus širší */
   --gutter: clamp(16px, 4vw, 40px);
   --header-h: 72px;
 
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #1c1612;
-    --surface: #262019;
-    --text: #f3eadc;
-    --muted: #c6b8a8;
-    --sand: #33291f;
-    --sage-soft: #2a3128;
-    --line: rgba(243, 234, 220, 0.14);
-    --accent: #ee7d45;
-    --accent-strong: #f59a68;
-    --on-accent: #1c1612;
-    --dark-band: #120e0b;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -14px rgba(0, 0, 0, 0.6);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #1c1612;
-  --surface: #262019;
-  --text: #f3eadc;
-  --muted: #c6b8a8;
-  --sand: #33291f;
-  --sage-soft: #2a3128;
-  --line: rgba(243, 234, 220, 0.14);
-  --accent: #ee7d45;
-  --accent-strong: #f59a68;
-  --on-accent: #1c1612;
-  --dark-band: #120e0b;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -14px rgba(0, 0, 0, 0.6);
-  color-scheme: dark;
+  color-scheme: only light; /* web je vždy světlý, i když má systém tmavý režim */
 }
 
 /* ---------- Základ ---------- */
@@ -231,16 +198,19 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 
 /* ---------- Hero ---------- */
 
+/* Úvod vyplní okno, ale na vysokých monitorech nenechá obří mezery (strop 64rem)
+   a na nízkých noteboocích (768 px) se písmo i koláž zmenší, aby tlačítka byla vidět bez scrollování. */
 .hero {
   position: relative;
-  min-height: 100svh;
-  padding: calc(var(--header-h) + clamp(24px, 6vw, 72px)) 0 clamp(48px, 8vw, 96px);
+  min-height: min(100vh, 64rem);
+  min-height: min(100svh, 64rem);
+  padding: calc(var(--header-h) + clamp(16px, 4vh, 64px)) 0 clamp(32px, 6vh, 96px);
   display: flex; align-items: center;
   overflow: clip;
 }
 .hero .wrap { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
-.hero h1 { margin-bottom: 0.35em; }
-.hero .lead { max-width: 34ch; margin-bottom: 2rem; }
+.hero h1 { margin-bottom: 0.35em; font-size: clamp(2.6rem, min(1.6rem + 4.6vw, 9.6vh), 6.2rem); }
+.hero .lead { max-width: 34ch; margin-bottom: clamp(1.25rem, 3.6vh, 2rem); }
 
 .hero-blob {
   position: absolute; z-index: -1; border-radius: 50%; filter: blur(2px);
@@ -249,7 +219,7 @@ p { margin: 0 0 1em; text-wrap: pretty; }
   transform: translate3d(0, calc(var(--hero-p, 0) * 120px), 0);
 }
 
-.collage { position: relative; aspect-ratio: 1 / 1.05; width: 100%; max-width: 560px; justify-self: end; }
+.collage { position: relative; aspect-ratio: 1 / 1.05; width: 100%; max-width: min(600px, 62vh); justify-self: end; }
 .collage figure {
   position: absolute; margin: 0; overflow: hidden;
   border-radius: var(--radius-lg); box-shadow: var(--shadow);
@@ -281,8 +251,11 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 .scroll-cue i::after { content: ""; position: absolute; left: 50%; top: 7px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: currentColor; animation: cue 1.8s infinite; }
 @keyframes cue { 0% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(12px); opacity: 0; } 100% { opacity: 0; } }
 
+@media (max-height: 820px) { .scroll-cue { display: none; } }
+
 @media (max-width: 860px) {
   .hero { min-height: auto; }
+  .hero h1 { font-size: clamp(2.6rem, 1.6rem + 4.6vw, 5.6rem); }
   .hero .wrap { grid-template-columns: 1fr; }
   .collage { max-width: 440px; justify-self: center; margin-top: 8px; }
   .collage .sticker { width: 104px; height: 104px; font-size: 0.72rem; }
@@ -674,8 +647,6 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 
 /* Graf výdajů: jedna barva, popisky u pruhů, tooltip při najetí */
 :root { --chart-bar: #d4612a; --chart-track: rgba(43, 33, 27, 0.07); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart-bar: #e0703a; --chart-track: rgba(243, 234, 220, 0.08); } }
-:root[data-theme="dark"] { --chart-bar: #e0703a; --chart-track: rgba(243, 234, 220, 0.08); }
 .bars { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(20px, 3vw, 32px); }
 .bars__title { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin-bottom: 18px; }
 .bars__list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }

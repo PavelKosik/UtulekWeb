@@ -340,8 +340,32 @@ async function scrollThrough(p) {
     await ctx.close();
   }
 
-  // 5) axe-core (světlý i tmavý režim)
-  for (const scheme of ['light', 'dark']) {
+  // 5) web je vždy světlý, i když má systém tmavý režim
+  {
+    const ctx = await newCtx(browser, { viewport: { width: 1280, height: 900 }, colorScheme: 'dark' });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'index.html', { waitUntil: 'load' });
+    const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    check('dark system theme: page stays light', bg === 'rgb(247, 240, 229)', bg);
+    await ctx.close();
+  }
+
+  // 6) úvod: tlačítka vidět bez scrollování, na vysokých monitorech bez obří mezery
+  for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [1363, 1472], [2560, 1440], [390, 844]]) {
+    const ctx = await newCtx(browser, { viewport: { width: w, height: h }, reducedMotion: 'reduce' });
+    const p = await ctx.newPage();
+    await p.goto(BASE + 'index.html', { waitUntil: 'load' });
+    const m = await p.evaluate(() => {
+      const b = s => document.querySelector(s).getBoundingClientRect();
+      return { cta: Math.round(b('.hero .btn-row').bottom), gap: Math.round(b('.hero .wrap').top - b('.site-header').bottom) };
+    });
+    const ok = m.cta <= h && (w <= 860 || m.gap <= 200);
+    check(`hero ${w}×${h}: buttons above the fold, no huge gap`, ok, JSON.stringify(m));
+    await ctx.close();
+  }
+
+  // 7) axe-core
+  for (const scheme of ['light']) {
     for (const pg of PAGES) {
       const ctx = await newCtx(browser, { viewport: { width: 1280, height: 900 }, colorScheme: scheme, reducedMotion: 'reduce' });
       const p = await ctx.newPage();

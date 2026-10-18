@@ -212,8 +212,8 @@ def head(title, desc, current, extra_head=""):
   <title>{full}</title>
   <meta name="description" content="{desc}">
   <link rel="canonical" href="{url}">
-  <meta name="theme-color" content="#f7f0e5" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1c1612" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="only light">
+  <meta name="theme-color" content="#f7f0e5">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Depozitum chlup-nechlup">

@@ -63,7 +63,9 @@ Test projde všech 9 stránek a zkontroluje:
 - přetékání do strany na šířkách 320 až 1920 px,
 - interakce: mobilní menu, záložky, volbu částky a QR, kopírování, sdílení, počítadla, „Cestu kočky“, mobilní lištu,
 - režim bez animací a bez JavaScriptu,
-- přístupnost (axe-core) ve světlém i tmavém režimu.
+- úvod na obrazovkách od 720 do 1472 px výšky: tlačítka vidět bez scrollování, žádná obří mezera,
+- že web zůstane světlý i při tmavém režimu v systému,
+- přístupnost (axe-core).
 
 Celoplošné screenshoty a `report.json` uloží do `tests/out/`. Když najde problém, skončí s chybou.
 
