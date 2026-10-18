@@ -28,7 +28,6 @@ ORG_REG = "spolek zapsaný ve spolkovém rejstříku u Krajského soudu v Česk�
 SITE_URL = "https://pavelkosik.github.io/UtulekWeb/"
 
 JUSTICE_DOCS = "https://or.justice.cz/ias/ui/vypis-sl-firma?subjektId=1208050"
-CITY_CATS = "https://www.strakonice.eu/nalezenekocky"
 
 PHONE = "+420\u00a0607\u00a0707\u00a0537"  # nezlomitelné mezery, číslo se nerozdělí na dva řádky
 PHONE_TEL = "+420607707537"
@@ -39,8 +38,8 @@ IBAN_PRETTY = "CZ61\u00a02010\u00a00000\u00a00060\u00a07776\u00a00777"
 FIO = "https://ib.fio.cz/ib/transparent?a=6077760777"
 FB = "https://www.facebook.com/depozitumchlupnechlup"
 FB_DITA = "https://www.facebook.com/dita.uhrikova/"
-FB_RECEIPTS = "https://www.facebook.com/media/set/?vanity=depozitumchlupnechlup&amp;set=a.3773941716006989"
-FB_ALBUM = "https://www.facebook.com/media/set/?set=a.2506635422737631&amp;type=3"
+FB_RECEIPTS = "https://www.facebook.com/media/set/?set=a.2506635422737631&amp;type=3"
+FB_ALBUM = "https://www.facebook.com/media/set/?vanity=depozitumchlupnechlup&amp;set=a.3773941716006989"
 IG = "https://www.instagram.com/chlupnechlup/"
 PESWEB = "https://www.pesweb.cz/utulky/depozitum-chlup-nechlup"
 PESWEB_CAT = "https://www.pesweb.cz/kocky-k-adopci/"
@@ -86,11 +85,11 @@ CITY_MONTHLY = 20_000
 # Co se v depozitu vždy hodí. Upravte podle aktuální potřeby.
 WISHLIST = [
     ("Stelivo", "v 10litrových pytlích, měsíčně jich spotřebujeme kolem padesáti"),
-    ("Kapsičky, konzervy, paštiky", "pro koťata i dospělé kočky"),
-    ("Granule", "kvalitní, ideálně jedné značky, ať se kočkám nemění strava"),
-    ("Mléko pro koťata", "náhražka mateřského mléka pro neodstavená koťata bez matky"),
-    ("Antiparazitika", "odčervovací tablety a kapky proti blechám"),
-    ("Absorpční podložky a drogerie", "podložky do klecí, drogerie na úklid karantény"),
+    ("Kapsičky, konzervy a granule", "pro koťata i dospělé kočky"),
+    ("Přepravky na kočky", "zapůjčené se nám ne vždy vrátí"),
+    ("Odchytové klece", "na odchyt polodivokých koček, které je potřeba vykastrovat"),
+    ("Antiparazitika", "proti vnitřním i vnějším parazitům"),
+    ("Deky, povlečení, škrabadla a pelíšky", "deky a povlečení klidně i staré"),
 ]
 WISHLIST_DATE = STATS_DATE
 
@@ -446,15 +445,15 @@ def account_card(extra_class=""):
 def monthly_block():
     return f"""<div class="monthly">
           <div>
-            <p class="eyebrow">Kočičí andělé</p>
+            <p class="eyebrow">Trvalý příkaz</p>
             <h3 class="reveal">Nejvíc pomůže pravidelný příspěvek.</h3>
-            <p class="reveal">Díky trvalému příkazu víme, s čím můžeme počítat, a můžeme vzít další kočku z ulice. Už přes 20 lidí nám takhle posílá 100 až 500 Kč měsíčně. Kdyby se jich sešlo sto po 300 Kč, pokryli by skoro všechno krmivo na měsíc.</p>
+            <p class="reveal">Díky trvalému příkazu víme, s čím můžeme počítat, a můžeme vzít další kočku z ulice. Už přes 20 lidí nám takhle posílá peníze každý měsíc, většinou 100 až 500 Kč. Kdyby se jich sešlo sto po 300 Kč, pokryli by skoro všechno krmivo na měsíc.</p>
             <p class="reveal">Trvalý příkaz si nastavíte za dvě minuty a kdykoli ho můžete zrušit.</p>
           </div>
           <ol class="reveal">
             <li>V internetovém bankovnictví zvolte <strong>Trvalý příkaz</strong>.</li>
             <li>Číslo účtu: <span class="copy-field">{ACCOUNT} <button type="button" data-copy="{ACCOUNT}">Kopírovat</button></span></li>
-            <li>Zpráva pro příjemce: <span class="copy-field">KOCICI ANDEL <button type="button" data-copy="KOCICI ANDEL">Kopírovat</button></span></li>
+            <li>Do zprávy pro příjemce napište své jméno, ať víme, komu poděkovat.</li>
             <li>Zvolte částku a frekvenci <strong>měsíčně</strong>. Děkujeme!</li>
           </ol>
         </div>"""
@@ -779,7 +778,7 @@ INDEX = f"""
           {widget({"sort": "foundDate:asc"}, {"itemsPerPage": 6, "mobileItems": 3}, reveal=False)}
         </div>
         <div class="tab-panel" id="panel-nove" role="tabpanel" tabindex="0" aria-labelledby="tab-nove" hidden>
-          <p class="tab-intro">Nejnovější přírůstky, které už prošly karanténou a hledají domov. Na jaře a v létě jsou to hlavně koťata.</p>
+          <p class="tab-intro">Nejnovější přírůstky, které hledají domov. Na jaře a v létě jsou to hlavně koťata.</p>
           {widget({"sort": "createdAt:desc"}, {"itemsPerPage": 6, "mobileItems": 3}, reveal=False)}
         </div>
         <div class="btn-row" style="margin-top:1.75rem">
@@ -872,14 +871,14 @@ INDEX = f"""
           </a>
           <a class="help-card reveal" style="--d:.16s" href="#dar">
             <div class="help-card__icon">{ICON["repeat"]}</div>
-            <h3>Kočičí anděl</h3>
+            <h3>Pravidelný příspěvek</h3>
             <p>Pravidelný příspěvek trvalým příkazem nám pomáhá nejvíc. I 200 Kč měsíčně je znát. Účet je transparentní.</p>
             <span class="help-card__more">Nastavit trvalý příkaz{ICON["arrow"]}</span>
           </a>
           <a class="help-card reveal" style="--d:.24s" href="podporte-nas.html#sdileni">
             <div class="help-card__icon">{ICON["share"]}</div>
             <h3>Sdílejte</h3>
-            <p>Většina lidí se o nás dozví od známých. Sdílejte kočičky, pověste plakát u veterináře nebo na obecní nástěnce.</p>
+            <p>Sdílejte kočičky, pověste plakát u veterináře nebo na obecní nástěnce. Čím víc lidí kočku uvidí, tím dřív najde domov.</p>
             <span class="help-card__more">Plakát a sdílení{ICON["arrow"]}</span>
           </a>
         </div>
@@ -945,7 +944,7 @@ INDEX = f"""
           <div>
             <p class="eyebrow">Srdce depozita</p>
             <h2 id="dita-nadpis" class="reveal">Za vším stojí Dita.</h2>
-            <p class="reveal" style="--d:.06s">Depozitum vzniklo jako malé rodinné zázemí pro nalezené kočky z okolí. Založila ho a vede <strong>Dita Uhriková</strong>. Už přes deset let se stará o nemocné a zraněné kočky, protože Strakonice pořád nemají kočičí útulek.</p>
+            <p class="reveal" style="--d:.06s">Depozitum vzniklo jako malé rodinné zázemí pro nalezené kočky z okolí. Založila ho a vede <strong>Dita Uhriková</strong>. Už patnáct let se stará o nemocné a zraněné kočky, protože Strakonice pořád nemají kočičí útulek.</p>
             <p class="reveal" style="--d:.12s">Pokud se rozhodnete kočku adoptovat nebo jste nějakou našli, budete jednat právě s ní.</p>
             <div class="btn-row reveal" style="--d:.18s">
               <a class="btn" href="o-nas.html">Náš příběh{ICON["arrow"]}</a>
@@ -1172,7 +1171,7 @@ DOCASKA = f"""
       <div class="wrap">
         <div class="layout-aside">
           <div class="prose">
-            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" loading="lazy" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil v dočasné péči</figcaption></figure>
+            <figure class="reveal"><img src="assets/img/eliot-a-emil.jpg" alt="Koťata Eliot a Emil na škrabadle" loading="lazy" width="960" height="720" sizes="(max-width: 960px) 92vw, 720px"><figcaption>Eliot a Emil už mají domov</figcaption></figure>
 
             <h2>Proč dočasná péče pomáhá</h2>
             <ul>
@@ -1228,7 +1227,7 @@ DOCASKA = f"""
           </details>
           <details>
             <summary>Kdo mi poradí, když si nebudu vědět rady?</summary>
-            <div class="faq__body"><p>Dita. Je na telefonu <a href="tel:{PHONE_TEL}">{PHONE}</a> a s kočkami má víc než desetiletou zkušenost.</p></div>
+            <div class="faq__body"><p>Dita. Je na telefonu <a href="tel:{PHONE_TEL}">{PHONE}</a> a s kočkami pracuje už patnáct let.</p></div>
           </details>
           <details>
             <summary>Co když pojedu na dovolenou?</summary>
@@ -1313,7 +1312,7 @@ PODPORA = f"""
       <div class="wrap wrap--narrow center">
         <p class="eyebrow" style="justify-content:center">Děkujeme</p>
         <h2 id="dekujeme-nadpis" class="reveal">Pomáhají nám</h2>
-        <p class="lead reveal" style="margin-inline:auto;max-width:60ch"><strong>Město Strakonice</strong>, které s námi má od roku 2024 smlouvu o péči o toulavé a opuštěné kočky, spolek <a href="https://www.pomahejmezviratum.cz/" target="_blank" rel="noopener">Pomáhejme zvířatům</a>, který nám přispěl na krmivo a odchytové pasti, a hlavně stovky lidí, kteří posílají dary, krmení a sdílejí naše kočky.</p>
+        <p class="lead reveal" style="margin-inline:auto;max-width:60ch"><strong>Město Strakonice</strong>, se kterým máme od roku 2024 smlouvu, spolek <a href="https://www.pomahejmezviratum.cz/" target="_blank" rel="noopener">Pomáhejme zvířatům</a>, který nám přispěl z celostátní sbírky Den zvířat, a hlavně stovky lidí, kteří posílají dary, krmení a sdílejí naše kočky.</p>
       </div>
     </section>
 
@@ -1331,7 +1330,7 @@ PODPORA = f"""
           <a class="btn" href="mailto:{EMAIL}?subject=V%C4%9Bcn%C3%BD%20dar">{ICON["mail"]}Domluvit věcný dar</a>
           <a class="btn btn--ghost" href="tel:{PHONE_TEL}">{ICON["phone"]}{PHONE}</a>
         </div>
-        <p class="note" style="margin-top:0.875rem">Seznam aktualizován: {WISHLIST_DATE}.</p>
+        <p class="note" style="margin-top:0.875rem">Podle toho, o co depozitum žádá na Peswebu a co nejčastěji kupuje (transparentní účet, {WISHLIST_DATE}).</p>
       </div>
     </section>
 
@@ -1341,7 +1340,7 @@ PODPORA = f"""
           <div>
             <p class="eyebrow">Sdílení</p>
             <h2 id="sdileni-nadpis" class="reveal">Nic nestojí a moc pomáhá</h2>
-            <p class="reveal">Většina lidí se o útulcích dozví od známých nebo ze sociálních sítí. Kočky, které víc lidí uvidí, najdou domov rychleji.</p>
+            <p class="reveal">Kočky, které vidí víc lidí, najdou domov rychleji.</p>
             <ul class="checklist reveal">
               <li><span>Sdílejte jednu kočičku týdně z <a href="{FB}" target="_blank" rel="noopener">Facebooku Depozita</a>.</span></li>
               <li><span>Vytiskněte plakát a pověste ho u veterináře, v obchodě nebo na obecní nástěnce.</span></li>
@@ -1350,7 +1349,7 @@ PODPORA = f"""
           </div>
           <div class="quote-card reveal" style="--d:.08s">
             <h3>Plakát „Hledáme domov“</h3>
-            <p style="color:var(--muted)">A4 s QR kódem, který vede přímo na naše kočky na Peswebu. Stačí vytisknout.</p>
+            <p style="color:var(--muted)">A4 s QR kódem, který vede přímo na naše kočky k adopci. Stačí vytisknout.</p>
             <div class="btn-row" style="margin-bottom:1.5rem">
               <a class="btn" href="plakat.html">{ICON["print"]}Otevřít plakát</a>
             </div>
@@ -1391,7 +1390,7 @@ PODPORA = f"""
 
     <section class="section section--sand section--tight">
       <div class="wrap wrap--narrow center">
-        <p class="statement" data-words style="margin-inline:auto">Za deset let jsme zachránili stovky koček. <em>Bez vašich darů by to nešlo.</em> Děkujeme.</p>
+        <p class="statement" data-words style="margin-inline:auto">Za patnáct let jsme zachránili stovky koček. <em>Bez vašich darů by to nešlo.</em> Děkujeme.</p>
       </div>
     </section>
 """
@@ -1405,7 +1404,7 @@ NALEZ = f"""
       <div class="wrap">
         <p class="eyebrow reveal">Našli jste kočku?</p>
         <h1 class="reveal" style="--d:.06s">Co dělat, když <span class="accent-word">najdete kočku</span></h1>
-        <p class="lead reveal" style="--d:.12s">Nalezené zvíře je potřeba ohlásit obci a obec se o ně musí postarat, o kočku stejně jako o psa. Postup, který opravdu pomáhá, sepsala Eva Hulcová a zveřejňujeme ho s jejím laskavým svolením.</p>
+        <p class="lead reveal" style="--d:.12s">Nalezené zvíře je potřeba ohlásit obci a obec se o ně musí postarat, o kočku stejně jako o psa. Postup, který opravdu pomáhá, sepsala Eva Hulcová a zveřejňujeme ho zkrácený s jejím laskavým svolením.</p>
         <div class="btn-row reveal" style="--d:.18s">
           <a class="btn btn--ghost" href="#kotata">Našli jste koťata?</a>
           <a class="btn btn--ghost" href="#ztracena">Ztratila se vám kočka?</a>
@@ -1437,7 +1436,7 @@ NALEZ = f"""
               <li>Do útulku volejte, až když na obci narazíte. Mnoho obcí zákony nezná. Nahrávejte hovor, stěžujte si, chtějte odmítnutí písemně. Správný útulek vám poradí, pomůže a zavolá starostovi.</li>
               <li>Každá nenahlášená kočka je pro obec „neviditelná“. Obce pak tvrdí, že problém s kočkami nemají, a celý systém se nemůže zlepšit.</li>
               <li>Pokud obec kočku přijme, sledujte její další osud. Kočka musí být obcí zaevidovaná a vyhlášená na úřední desce, aby se mohl dohledat případný majitel. Předem upozorněte, že se budete zajímat.</li>
-              <li>Nedávejte kočky do pochybných útulků, které zvířata hromadí a nevydávají. Správný útulek poznáte podle toho, že má IČO, transparentní účet, zveřejněné hospodaření, web s datem a místem nálezu koček, nemá extrémní úmrtnost a nalezené kočky hlásí obcím.</li>
+              <li>Nedávejte kočky do pochybných útulků, které zvířata hromadí a nevydávají. Správný útulek poznáte podle toho, že má IČO, sbírkový účet, výroční zprávy, web s datem a místem nálezu koček, nehromadí zvířata, nemá extrémní úmrtnost a nalezené kočky má nahlášené obcím.</li>
             </ol>
             <blockquote>
               <p>Prosím nálezce, aby na nás brali ohled. Je nás málo a chodíme do vlastní práce. Postupujte prosím podle návodu a podle zákona právě proto, aby se podmínky pro toulavé kočky v naší zemi změnily. Moc děkuji. Sdílejte prosím.</p>
@@ -1461,16 +1460,12 @@ NALEZ = f"""
               <li>S odchytem rádi poradíme, ozvěte se.</li>
             </ul>
 
-            <div class="callout">
-              <p><strong>Nalezené kočky ze Strakonic</strong> zveřejňuje město na své <a href="{CITY_CATS}" target="_blank" rel="noopener">stránce Nalezené kočky</a>. Hledáte-li ztracenou kočku, podívejte se i tam.</p>
-            </div>
-
             <h2 id="ztracena">Ztratila se vám kočka?</h2>
-            <p>Většina ztracených koček je blíž, než si myslíte. Podle studie z Austrálie se tři čtvrtiny ztracených koček našly do 500 metrů od místa, kde utekly.</p>
+            <p>Většina ztracených koček je blíž, než si myslíte. Podle studie australských vědců byly tři čtvrtiny nalezených koček do 500 metrů od místa, kde utekly.</p>
             <ul>
               <li><strong>Hledejte hned a pěšky</strong>, hlavně za soumraku a v noci, kdy je klid. Volejte ji tichým hlasem a zachrastěte granulemi.</li>
               <li>Poproste sousedy, ať se podívají do kůlen, garáží, sklepů a altánů. Vyděšená kočka se schová a nemňouká.</li>
-              <li>Nahlaste ztrátu obci a městské policii, vyvěste letáky s fotkou a zveřejněte ji na Pesweb.cz v sekci <a href="https://www.pesweb.cz/ztracene-zvire" target="_blank" rel="noopener">Ztracená zvířata</a>. Ve Strakonicích sledujte i <a href="{CITY_CATS}" target="_blank" rel="noopener">nalezené kočky na webu města</a>.</li>
+              <li>Nahlaste ztrátu obci a městské policii, vyvěste letáky s fotkou a zveřejněte ji na Pesweb.cz v sekci <a href="https://www.pesweb.cz/ztracene-zvire" target="_blank" rel="noopener">Ztratili jste zvíře?</a> Podívejte se i mezi <a href="kocky-k-adopci.html">naše kočky k adopci</a>.</li>
               <li>Pokud je kočka čipovaná, ověřte, že je čip zaregistrovaný na vaše aktuální údaje.</li>
             </ul>
             <div class="callout">
@@ -1584,9 +1579,9 @@ ONAS = f"""
           <div class="split__media reveal" data-progress><img sizes="(max-width: 860px) 92vw, 540px" src="assets/img/mourek.jpg" alt="Mourovatá kočka odpočívá na huňaté dece" loading="lazy"></div>
           <div class="prose">
             <h2 class="mt-0">Jak to celé začalo</h2>
-            <p>Depozitum vzniklo před více než deseti lety jako malé rodinné zázemí pro nalezené kočičky z okolí. Postupně se rozrostlo do dnešní velikosti.</p>
+            <p>Depozitum vzniklo zhruba před patnácti lety jako malé rodinné zázemí pro nalezené kočičky z okolí. Postupně se rozrostlo do dnešní velikosti.</p>
             <p>Kapacita depozita je <strong>20 míst</strong>. Část z nich zabírají kočky v karanténě a starší kočky, pro které se domov hledá těžko. Kvůli nemocem navíc ubytováváme kočky z různých lokalit odděleně a důsledně dodržujeme hygienu.</p>
-            <p>Za rok se v depozitu vystřídá zhruba <strong>100 až 120 koček</strong>. Přes Pesweb.cz už u nás domov našlo <strong>{ADOPTED} koček</strong>.</p>
+            <p>Za rok projde depozitem <strong>téměř 200 koček</strong>. Přes Pesweb.cz už u nás domov našlo <strong>{ADOPTED} koček</strong>.</p>
           </div>
         </div>
       </div>
@@ -1603,11 +1598,11 @@ ONAS = f"""
         <div class="layout-aside">
           <div class="prose">
             <h2 class="mt-0">Dita Uhriková</h2>
-            <p>Depozitum založila a vede Dita Uhriková, předsedkyně spolku. Kočky odchytává, léčí a hledá jim domov už přes deset let. Hotovo pořád není: na ulicích se objevují další kočky i s koťaty.</p>
+            <p>Depozitum založila a vede Dita Uhriková, předsedkyně spolku. Kočky odchytává, léčí a hledá jim domov už patnáct let. Hotovo pořád není: na ulicích se objevují další kočky i s koťaty.</p>
             <p>Rozhovor s Ditou si můžete přečíst na portálu <a href="https://www.jcted.cz/dita-uhrikova-bojuje-za-kocici-utulek-za-obce-hasime-problemy-z-urazek-na-internetu-si-nic-nedelam-rika/" target="_blank" rel="noopener">Jižní Čechy Teď</a>.</p>
 
             <h2>Strakonice nemají vlastní kočičí útulek</h2>
-            <p>Dlouhá léta jsme všechno platili jen z darů. Od roku 2024 má s námi Město Strakonice smlouvu o péči o toulavé a opuštěné kočky a přispívá {fmt_kc(CITY_MONTHLY)} měsíčně. Nalezené kočky ze Strakonic proto najdete i na <a href="{CITY_CATS}" target="_blank" rel="noopener">stránce města</a>. Příspěvek pokryje zhruba třetinu nákladů, zbytek dávají dárci.</p>
+            <p>Dlouhá léta jsme všechno platili jen z darů. Od roku 2024 máme smlouvu s Městem Strakonice, které nám přispívá {fmt_kc(CITY_MONTHLY)} měsíčně. Příspěvek pokryje zhruba třetinu nákladů, zbytek dávají dárci.</p>
             <p>Zvlášť v době jarních koťat se snažíme depozitum „nafouknout“ a využít každou dočasnou péči, kterou najdeme. Kapacitou ale nemůžeme pokrýt péči o všechny nechtěné a toulavé kočky ze Strakonic a přilehlých obcí. Obcím, které to chtějí řešit, rádi poradíme: <a href="pro-obce.html">spolupráce s obcemi</a>.</p>
 
             <h2>Kdo nám pomáhá</h2>
