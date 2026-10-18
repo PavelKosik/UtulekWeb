@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Nahradí v písmu Fraunces malé „j“ klidnějším tvarem.
 
-Původní „j“ má pod účařím nožičku vybočenou doprava a zakroucený ocásek, takže ve velkých
-nadpisech („Najděte svou…“) působí jako písmeno z jiného písma. Nové „j“ má rovnou nožičku
-a ocásek převzatý z velkého „J“ téhož písma, zmenšený na šířku tahu malého „j“. Tečka,
-horní patka, šířka znaku i kerning zůstávají původní. Úprava platí pro všechny tloušťky
+Původní „j“ má pod účařím nožičku vybočenou doprava a ocásek zakroucený do velké kuličky,
+takže ve velkých nadpisech („Najděte svou…“) působí jako písmeno z jiného písma. Nové „j“
+má rovnou nožičku a ocásek bez kuličky: je to zrcadlově otočený ocásek „t“ téhož písma
+(dřík „t“ má stejnou šířku jako dřík „j“), takže ladí se zbytkem abecedy. Tečka, horní
+patka, šířka znaku i kerning zůstávají původní. Úprava platí pro všechny tloušťky
 (variabilní osa wght), kurzívy se netýká.
 
 Spuštění:  python3 tools/fraunces_j.py   (potřebuje fontTools a brotli: pip install fonttools brotli)
@@ -22,10 +23,10 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FONT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets/fonts/fraunces-normal-latin.woff2"
 
-# Velké J: obrys od konce rovné části pravého okraje dříku (46) kolem ocásku po konec
-# rovné části levého okraje (24).
-J_RIGHT, J_LEFT = 46, 24
-J_HOOK = list(range(J_RIGHT, 51)) + list(range(0, J_LEFT + 1))
+# Malé t: 37 a 19 jsou konce rovného levého a pravého okraje dříku, mezi nimi je ocásek.
+# Po zrcadlení se body procházejí pozpátku, aby obrys dál vedl po směru hodinových ručiček.
+T_LEFT, T_RIGHT = 37, 19
+T_HOOK = list(range(T_LEFT, T_RIGHT - 1, -1))
 # Malé j v původním písmu: 0 a 31 jsou konce rovného dříku, 1–30 ocásek,
 # 32–49 levý okraj nahoru, patka a pravý okraj dolů, 50–61 tečka.
 J_POINTS = 62
@@ -40,14 +41,14 @@ def masters(font, name):
     return list(coords), light, list(flags), var
 
 
-def new_j(big, small):
-    """Ocásek z J zmenšený tak, aby jeho dřík měl šířku dříku malého j a sahal stejně hluboko."""
-    scale = (small[0][0] - small[31][0]) / (big[J_RIGHT][0] - big[J_LEFT][0])
-    big_bottom = min(big[i][1] for i in J_HOOK)
-    small_bottom = min(y for x, y in small[:50])
-    hook = [(small[31][0] + (big[i][0] - big[J_LEFT][0]) * scale,
-             small_bottom + (big[i][1] - big_bottom) * scale) for i in J_HOOK]
-    return [(round(x), round(y)) for x, y in hook + small[32:J_POINTS]]
+def new_j(t, j):
+    """Dřík j protažený rovně dolů a zakončený zrcadleným ocáskem t ve stejné hloubce jako dřív."""
+    scale = (j[0][0] - j[31][0]) / (t[T_RIGHT][0] - t[T_LEFT][0])
+    t_bottom = min(t[i][1] for i in T_HOOK)
+    j_bottom = min(y for x, y in j[:50])
+    hook = [(j[0][0] - (t[i][0] - t[T_LEFT][0]) * scale,
+             j_bottom + (t[i][1] - t_bottom) * scale) for i in T_HOOK]
+    return [(round(x), round(y)) for x, y in hook + j[32:J_POINTS]]
 
 
 def main():
@@ -56,25 +57,24 @@ def main():
     if len(glyf["j"].getCoordinates(glyf)[0]) != J_POINTS:
         print(FONT.name, "už má upravené j, nic neměním.")
         return
-    big_bold, big_light, big_flags, _ = masters(font, "J")
-    small_bold, small_light, small_flags, var = masters(font, "j")
-    bold = new_j(big_bold, small_bold)
-    light = new_j(big_light, small_light)
+    t_bold, t_light, t_flags, _ = masters(font, "t")
+    j_bold, j_light, j_flags, var = masters(font, "j")
+    bold = new_j(t_bold, j_bold)
+    light = new_j(t_light, j_light)
 
-    hook = len(J_HOOK)
-    flags = [big_flags[i] & 1 for i in J_HOOK] + [f & 1 for f in small_flags[32:J_POINTS]]
-    flags[0] |= small_flags[0] & 0x40  # příznak překrývajících se obrysů
+    flags = [t_flags[i] & 1 for i in T_HOOK] + [f & 1 for f in j_flags[32:J_POINTS]]
+    flags[0] |= j_flags[0] & 0x40  # příznak překrývajících se obrysů
 
     glyph = glyf["j"]
     glyph.coordinates = GlyphCoordinates(bold)
     glyph.flags = bytearray(flags)
-    glyph.endPtsOfContours = [hook + 18 - 1, len(bold) - 1]
+    glyph.endPtsOfContours = [len(T_HOOK) + 18 - 1, len(bold) - 1]
     glyph.recalcBounds(glyf)
     deltas = [(lx - bx, ly - by) for (bx, by), (lx, ly) in zip(bold, light)]
     font["gvar"].variations["j"] = [TupleVariation(var.axes, deltas + list(var.coordinates[-4:]))]
     font["hmtx"]["j"] = (font["hmtx"]["j"][0], glyph.xMin)
     font.save(FONT)
-    print(FONT.name, "upraveno: j má rovnou nožičku a ocásek podle J.")
+    print(FONT.name, "upraveno: j má rovnou nožičku a ocásek jako t.")
 
 
 if __name__ == "__main__":
