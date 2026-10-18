@@ -116,6 +116,19 @@
   var lastY = window.scrollY;
   var ticking = false;
 
+  // Měříme jen prvky do jedné výšky okna od obrazovky. Čtení rozměrů prvku daleko pod obrazovkou
+  // by prohlížeč donutilo spočítat i tu část stránky, kterou jinak díky content-visibility přeskočí.
+  var near = null;
+  if ("IntersectionObserver" in window) {
+    near = new Set();
+    var nearIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) near.add(en.target); else near.delete(en.target); });
+      onScroll();
+    }, { rootMargin: "100% 0px" });
+    parallax.concat(marquees, statements, journey ? [journey] : []).forEach(function (el) { nearIO.observe(el); });
+  }
+  var isNear = function (el) { return !near || near.has(el); };
+
   var clamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
 
   var update = function () {
@@ -129,10 +142,10 @@
     var heroH = [], para = [], mq = [], stmt = [], stepRects = [];
     if (!reduceMotion) {
       heroes.forEach(function (h) { heroH.push(h.offsetHeight); });
-      parallax.forEach(function (el) { para.push(el.getBoundingClientRect()); });
-      marquees.forEach(function (el) { mq.push([el.getBoundingClientRect(), el.firstElementChild.scrollWidth, el.clientWidth]); });
-      statements.forEach(function (el) { stmt.push(el.getBoundingClientRect()); });
-      steps.forEach(function (s) { stepRects.push(s.getBoundingClientRect()); });
+      parallax.forEach(function (el) { para.push(isNear(el) ? el.getBoundingClientRect() : null); });
+      marquees.forEach(function (el) { mq.push(isNear(el) ? [el.getBoundingClientRect(), el.firstElementChild.scrollWidth, el.clientWidth] : null); });
+      statements.forEach(function (el) { stmt.push(isNear(el) ? el.getBoundingClientRect() : null); });
+      if (journey && isNear(journey)) steps.forEach(function (s) { stepRects.push(s.getBoundingClientRect()); });
     }
 
     // 2) Zápisy
@@ -140,7 +153,8 @@
     if (progressBar) progressBar.style.setProperty("--page-progress", docH > 0 ? clamp(y / docH).toFixed(4) : 0);
     if (header) {
       header.classList.toggle("is-scrolled", y > 12);
-      header.classList.toggle("is-hidden", y > lastY && y > 420 && !navOpen);
+      // směr jen při skutečném posunu; update() volá i hlídání prvků u obrazovky
+      if (y !== lastY || navOpen) header.classList.toggle("is-hidden", y > lastY && y > 420 && !navOpen);
     }
     lastY = y;
 
@@ -153,11 +167,12 @@
     // --p: 0 když prvek vjíždí zespodu, 1 když opouští horní okraj
     parallax.forEach(function (el, i) {
       var r = para[i];
-      if (r.bottom < -100 || r.top > vh + 100) return;
+      if (!r || r.bottom < -100 || r.top > vh + 100) return;
       el.style.setProperty("--p", clamp((vh - r.top) / (vh + r.height)).toFixed(4));
     });
 
     marquees.forEach(function (el, i) {
+      if (!mq[i]) return;
       var r = mq[i][0];
       if (r.bottom < 0 || r.top > vh) return;
       var p = clamp((vh - r.top) / (vh + r.height));
@@ -166,6 +181,7 @@
 
     statements.forEach(function (el, i) {
       var r = stmt[i];
+      if (!r) return;
       // rozsvěcování začne, když je text v 90 % výšky okna; celý svítí, když jeho střed dojede doprostřed
       var lit = Math.round(clamp((vh * 0.9 - r.top) / (vh * 0.4 + r.height * 0.5)) * el._words.length);
       if (lit === el._lit) return;
@@ -173,7 +189,7 @@
       el._words.forEach(function (w, j) { w.classList.toggle("is-lit", j < lit); });
     });
 
-    if (steps.length) {
+    if (stepRects.length) {
       var mid = vh * 0.5;
       var current = 0;
       stepRects.forEach(function (r, i) {

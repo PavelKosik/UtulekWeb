@@ -98,7 +98,8 @@ async function scrollThrough(p) {
         links: [...document.querySelectorAll('a[href]')].map(a => ({ href: a.getAttribute('href'), abs: abs(a.getAttribute('href')), text: (a.textContent || a.getAttribute('aria-label') || '').trim(), blank: a.target === '_blank', rel: a.rel })),
         ids: [...document.querySelectorAll('[id]')].map(e => e.id),
         dupIds: (() => { const c = {}; document.querySelectorAll('[id]').forEach(e => c[e.id] = (c[e.id] || 0) + 1); return Object.keys(c).filter(k => c[k] > 1); })(),
-        buttonsNoName: [...document.querySelectorAll('button')].filter(b => !(b.innerText.trim() || b.getAttribute('aria-label'))).length,
+        // textContent, ne innerText: innerText je prázdný u sekcí, které prohlížeč díky content-visibility ještě nevykreslil
+        buttonsNoName: [...document.querySelectorAll('button')].filter(b => !(b.textContent.trim() || b.getAttribute('aria-label'))).length,
         iframes: [...document.querySelectorAll('iframe')].map(f => ({ src: f.src.slice(0, 80), h: f.offsetHeight })),
         revealHidden: [...document.querySelectorAll('.reveal')].filter(e => getComputedStyle(e).opacity === '0').length,
       };

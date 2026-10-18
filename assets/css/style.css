@@ -800,3 +800,10 @@ h1 .big-number, h2 .big-number { display: block; margin-bottom: 0.15em; }
   .process li::before { position: absolute; left: 1rem; top: 1rem; width: 2.25rem; height: 2.25rem; margin: 0; font-size: 1rem; }
   .process h3 { font-size: 1.1rem; }
 }
+
+/* Sekce mimo obrazovku prohlížeč spočítá a vykreslí, až když se k nim návštěvník blíží:
+   první načtení je rychlejší. Odhad výšky je průměr skutečných sekcí; po vykreslení si prohlížeč
+   pamatuje skutečnou výšku (auto). */
+main > section:not(:first-child), .site-footer { content-visibility: auto; contain-intrinsic-size: auto 56rem; }
+@media (max-width: 760px) { main > section:not(:first-child), .site-footer { contain-intrinsic-size: auto 83rem; } }
+@media print { main > section, .site-footer { content-visibility: visible; } }
